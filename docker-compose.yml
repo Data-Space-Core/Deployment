@@ -1,0 +1,137 @@
+services:
+  # Nginx Reverse Proxy for handling HTTP and HTTPS traffic
+  nginx:
+    image: nginx:latest
+    restart: unless-stopped
+    ports:
+      - "80:80"   # Exposes HTTP on port 80
+      - "443:443" # Exposes HTTPS on port 443
+    environment:
+      - OMEJDN_DOMAIN=sandbox4.collab-cloud.eu
+      - OMEJDN_PATH=/auth
+      - UI_PATH=/
+    volumes:
+      - ./nginx.development.conf:/etc/nginx/nginx.conf # Nginx configuration
+      - ./cert/:/etc/cert/ # SSL certificates
+      - ./cert/server.crt:/etc/nginx/omejdn.cert
+      - ./cert/server.key:/etc/nginx/omejdn.key
+    networks:
+      - local
+    depends_on:
+      - broker-core
+      - broker-fuseki
+      - omejdn-server
+      - omejdn-ui
+      - provider-connector
+      - provider-connector-database
+
+  # Broker Core Service - Manages data connectors and catalog
+  broker-core:
+    image: registry.gitlab.cc-asp.fraunhofer.de/eis-ids/broker-open/core:5.0.0
+    volumes:
+      - ./cert/:/etc/cert/ # SSL certificates
+    restart: always
+    environment:
+      - SPARQL_ENDPOINT=http://broker-fuseki:3030/connectorData # Use container name for Fuseki
+      - ELASTICSEARCH_HOSTNAME=broker-elasticsearch
+      - SHACL_VALIDATION=true
+      - DAPS_VALIDATE_INCOMING=true
+      - IDENTITY_JAVAKEYSTORE=isstbroker-keystore.jks
+      - COMPONENT_URI=https://sandbox4.collab-cloud.eu/broker/ # Updated for domain prefix
+      - COMPONENT_CATALOGURI=https://sandbox4.collab-cloud.eu/broker/connectors/ # Updated for domain prefix
+      - JWKS_TRUSTEDHOSTS=daps.aisec.fraunhofer.de,omejdn
+    expose:
+      - "8080" # Internal communication on port 8080
+    networks:
+      - local
+
+  # Fuseki Service - Provides SPARQL endpoint for Broker Core
+  broker-fuseki:
+    image: registry.gitlab.cc-asp.fraunhofer.de/eis-ids/broker-open/fuseki
+    volumes:
+      - broker-fuseki:/fuseki
+    expose:
+      - "3030" # Internal SPARQL communication on port 3030
+    networks:
+      - local
+
+  # Omejdn Server - Handles OAuth2 and OpenID authentication
+  omejdn-server:
+    image: ghcr.io/fraunhofer-aisec/omejdn-server:${OMEJDN_VERSION}
+    restart: unless-stopped
+    environment:
+      - OMEJDN_ISSUER=https://sandbox4.collab-cloud.eu/identity/ # Updated for domain prefix
+      - OMEJDN_FRONT_URL=https://sandbox4.collab-cloud.eu/identity/ # Updated for domain prefix
+      - OMEJDN_OPENID=true
+      - OMEJDN_ENVIRONMENT=${OMEJDN_ENVIRONMENT}
+      - OMEJDN_ACCEPT_AUDIENCE=idsc:IDS_CONNECTORS_ALL
+      - OMEJDN_DEFAULT_AUDIENCE=idsc:IDS_CONNECTORS_ALL
+      - OMEJDN_ADMIN=${ADMIN_USERNAME}:${ADMIN_PASSWORD}
+    volumes:
+      - ./config:/opt/config
+      - ./keys:/opt/keys # Keys and configurations
+    networks:
+      - local
+
+  # Omejdn UI - Provides a user interface for managing Omejdn
+  omejdn-ui:
+    image: ghcr.io/fraunhofer-aisec/omejdn-ui:${UI_VERSION}
+    restart: unless-stopped
+    environment:
+      - OIDC_ISSUER=https://sandbox4.collab-cloud.eu/identity/ # Updated for domain prefix
+      - API_URL=https://sandbox4.collab-cloud.eu/identity/api/v1 # Updated for domain prefix
+      - CLIENT_ID=adminUI
+    networks:
+      - local
+
+  # Provider Connector Database - PostgreSQL for Provider Connector
+  provider-connector-database:
+    image: postgres:13
+    container_name: provider-connector-database
+    ports:
+      - "5433:5432" # Exposes PostgreSQL on port 5433
+    environment:
+      - POSTGRES_USER=postgresuserb
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=connectorbdb
+    volumes:
+      - provider-connector-database:/var/lib/postgresql/data # Data persistence
+    networks:
+      - local
+
+  # Provider Connector - Manages data provisioning with integration to PostgreSQL
+  provider-connector:
+    image: ghcr.io/data-space-core/connector/stage:latest
+    container_name: provider-connector
+    ports:
+      - 8081:8081
+    environment:
+      - CONFIGURATION_PATH=/config/config.json
+      - SERVER_PORT=8081
+      - DAPS_URL=https://sandbox4.collab-cloud.eu/auth
+      - DAPS_TOKEN_URL=https://sandbox4.collab-cloud.eu/auth/token
+      - DAPS_KEY_URL=https://sandbox4.collab-cloud.eu/auth/jwks.json
+      - DAPS_INCOMING_DAT_DEFAULT_WELLKNOWN=/jwks.json
+      - SERVER_SSLv_KEY-STORE=file:///conf/testbed2.p12
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://provider-connector-database:5432/connectorbdb
+      - SPRING_DATASOURCE_USERNAME=postgresuserb
+      - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_DATASOURCE_PLATFORM=postgres
+      - SPRING_DATASOURCE_DRIVERCLASSNAME=org.postgresql.Driver
+      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.PostgreSQLDialect
+    volumes:
+      - ./conf/config.json:/config/config.json
+      - ./conf/testbed2.p12:/conf/testbed2.p12
+      - ./conf/truststore.p12:/config/truststore.p12
+    networks:
+      - local
+    depends_on:
+      - provider-connector-database
+
+volumes:
+  broker-fuseki: # Volume for Fuseki data
+  provider-connector-database: # Volume for Provider Connector data
+
+networks:
+  local:
+    driver: bridge # Bridge network for inter-service communication

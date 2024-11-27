@@ -1,0 +1,54 @@
+- client_id: 24:23:13:AE:C8:C2:A0:79:0D:A1:F2:2F:21:A3:68:C9:B8:A9:0D:C9:24:23:13:AE:C8:C2:A0:79:0D:A1:F2:2F:21:A3:68:C9:B8:A9:0D:C9
+  client_name: BOOO
+  grant_types: client_credentials
+  token_endpoint_auth_method: private_key_jwt
+  scope: idsc:IDS_CONNECTOR_ATTRIBUTES_ALL
+  attributes:
+  - key: idsc
+    value: IDS_CONNECTOR_ATTRIBUTES_ALL
+  - key: securityProfile
+    value: BASE_SECURITY_PROFILE
+  - key: referringConnector
+    value: http://BOOO.demo
+  - key: "@type"
+    value: ids:DatPayload
+  - key: "@context"
+    value: https://w3id.org/idsa/contexts/context.jsonld
+  - key: transportCertsSha256
+    value: 17c387d302d18f1a0fe81fc236cadc18a204416250e381477fa371591a725cc3
+- client_id: 24:23:13:AE:C8:C2:A0:79:0D:A1:F2:2F:21:A3:68:C9:B8:A9:0D:C9:keyid:24:23:13:AE:C8:C2:A0:79:0D:A1:F2:2F:21:A3:68:C9:B8:A9:0D:C9
+  client_name: BOOO22
+  grant_types: client_credentials
+  token_endpoint_auth_method: private_key_jwt
+  scope: idsc:IDS_CONNECTOR_ATTRIBUTES_ALL
+  attributes:
+  - key: idsc
+    value: IDS_CONNECTOR_ATTRIBUTES_ALL
+  - key: securityProfile
+    value: BASE_SECURITY_PROFILE
+  - key: referringConnector
+    value: http://BOOO22.demo
+  - key: "@type"
+    value: ids:DatPayload
+  - key: "@context"
+    value: https://w3id.org/idsa/contexts/context.jsonld
+  - key: transportCertsSha256
+    value: 17c387d302d18f1a0fe81fc236cadc18a204416250e381477fa371591a725cc3
+- client_id: 24:23:13:AE:C8:C2:A0:79:0D:A1:F2:2F:21:A3:68:C9:B8:A9:0D:C9:keyid:24:23:13:AE:C8:C2:A0:79:0D:A1:F2:2F:21:A3:68:C9:B8:A9:0D:C9
+  client_name: BOOO33
+  grant_types: client_credentials
+  token_endpoint_auth_method: private_key_jwt
+  scope: idsc:IDS_CONNECTOR_ATTRIBUTES_ALL
+  attributes:
+  - key: idsc
+    value: IDS_CONNECTOR_ATTRIBUTES_ALL
+  - key: securityProfile
+    value: BASE_SECURITY_PROFILE
+  - key: referringConnector
+    value: http://BOOO33.demo
+  - key: "@type"
+    value: ids:DatPayload
+  - key: "@context"
+    value: https://w3id.org/idsa/contexts/context.jsonld
+  - key: transportCertsSha256
+    value: 17c387d302d18f1a0fe81fc236cadc18a204416250e381477fa371591a725cc3
