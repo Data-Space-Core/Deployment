@@ -112,7 +112,7 @@ services:
       - DAPS_TOKEN_URL=https://sandbox4.collab-cloud.eu/auth/token
       - DAPS_KEY_URL=https://sandbox4.collab-cloud.eu/auth/jwks.json
       - DAPS_INCOMING_DAT_DEFAULT_WELLKNOWN=/jwks.json
-      - SERVER_SSLv_KEY-STORE=file:///conf/testbed2.p12
+      - SERVER_SSLv_KEY-STORE=file:///conf/default-connector-keystore.p12
       - SPRING_DATASOURCE_URL=jdbc:postgresql://provider-connector-database:5432/connectorbdb
       - SPRING_DATASOURCE_USERNAME=postgresuserb
       - SPRING_DATASOURCE_PASSWORD=password
@@ -121,7 +121,7 @@ services:
       - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.PostgreSQLDialect
     volumes:
       - ./conf/config.json:/config/config.json
-      - ./conf/testbed2.p12:/conf/testbed2.p12
+      - ./conf/default-connector-keystore.p12:/conf/default-connector-keystore.p12
       - ./conf/truststore.p12:/config/truststore.p12
     networks:
       - local
