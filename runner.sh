@@ -10,6 +10,17 @@ check_and_create_dir() {
   fi
 }
 
+# Function to check if a file exists
+check_file_exists() {
+  if [ ! -f "$1" ]; then
+    echo "Error: Required file $1 is missing!"
+    return 1
+  else
+    echo "File $1 exists."
+    return 0
+  fi
+}
+
 # Check required directories
 check_and_create_dir "./cert"
 check_and_create_dir "./conf"
@@ -20,14 +31,28 @@ OUT_FILE="./conf/default-connector-keystore.p12"
 if [ -d "$OUT_FILE" ]; then
   echo "Removing mistakenly created directory at $OUT_FILE"
   rm -rf "$OUT_FILE"
-elif [ -f "$OUT_FILE" ]; then
-  echo "File $OUT_FILE already exists. It will be overwritten."
-  rm -f "$OUT_FILE"
+fi
+
+# Check required files
+MISSING_FILES=0
+CERT_DIR="/home/vmuser/ryan/BLABLA/cert_2024"
+REQUIRED_FILES=(
+  "$CERT_DIR/server.key"
+  "$CERT_DIR/Certificate CRT/STAR_collab-cloud_eu.crt"
+  "./conf/config.json"
+  "./conf/truststore.p12"
+)
+
+for FILE in "${REQUIRED_FILES[@]}"; do
+  check_file_exists "$FILE" || MISSING_FILES=$((MISSING_FILES + 1))
+done
+
+if [ $MISSING_FILES -ne 0 ]; then
+  echo "Error: One or more required files are missing. Please check and try again."
+  exit 1
 fi
 
 # Generate PKCS#12 file
-CERT_DIR="/home/vmuser/ryan/BLABLA/cert_2024"
-
 echo "Generating PKCS#12 file..."
 openssl pkcs12 -export -out "$OUT_FILE" \
     -inkey "$CERT_DIR/server.key" \
@@ -40,6 +65,11 @@ else
   echo "Error: Failed to generate PKCS#12 file."
   exit 1
 fi
+
+# Ensure proper permissions for the `conf` directory and `default-connector-keystore.p12`
+echo "Setting permissions for the 'conf' directory and its files..."
+chmod -R 777 ./conf
+chown -R $(id -u):$(id -g) ./conf
 
 # Reminder for configuration
 echo "Please ensure that the produced file name matches the connector's config.json:"
