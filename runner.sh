@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Login to GHCR
+sudo docker login ghcr.io -u ryan.kford@icloud.com
+
 # Function to check and create a directory
 check_and_create_dir() {
   if [ ! -d "$1" ]; then
@@ -35,10 +38,10 @@ fi
 
 # Check required files
 MISSING_FILES=0
-CERT_DIR="/home/vmuser/ryan/BLABLA/cert_2024"
+CERT_DIR="./cert"
 REQUIRED_FILES=(
   "$CERT_DIR/server.key"
-  "$CERT_DIR/Certificate CRT/STAR_collab-cloud_eu.crt"
+  "$CERT_DIR/server.crt"
   "./conf/config.json"
   "./conf/truststore.p12"
 )
@@ -56,7 +59,7 @@ fi
 echo "Generating PKCS#12 file..."
 openssl pkcs12 -export -out "$OUT_FILE" \
     -inkey "$CERT_DIR/server.key" \
-    -in "$CERT_DIR/Certificate CRT/STAR_collab-cloud_eu.crt" \
+    -in "$CERT_DIR/server.crt" \
     -passout pass:password
 
 if [ $? -eq 0 ]; then
@@ -82,7 +85,7 @@ echo "If needed, rename the generated file to 'default-connector-keystore.p12' o
 REGISTER_SCRIPT="scripts/register.sh"
 CONNECTOR_NAME="default-connector"
 SECURITY_PROFILE="BASE_SECURITY_PROFILE"
-CERT_FILE="$CERT_DIR/Certificate CRT/STAR_collab-cloud_eu.crt"
+CERT_FILE="$CERT_DIR/server.crt"
 
 if [ -x "$REGISTER_SCRIPT" ]; then
   echo "Registering connector to DAPS..."
