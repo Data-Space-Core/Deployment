@@ -67,11 +67,11 @@ if [[ ! -f "$COMPOSE_FILE" ]]; then
     exit 1
 fi
 
-sed -i "s/__HOST__/$FQDN/g" "$NGINX_CONF"
-sed -i "s/__CERT__/$CERT_FILE/g" "$NGINX_CONF"
-sed -i "s/__KEY__/$KEY_FILE/g" "$NGINX_CONF"
-sed -i "s/__HOST__/$FQDN/g" "$COMPOSE_FILE"
-sed -i "s/__CERTDIR__/$CERT_PATH/g" "$NGINX_CONF"
+sed -i "s|__HOST__|$FQDN|g" "$NGINX_CONF"
+sed -i "s|__CERT__|$CERT_FILE|g" "$NGINX_CONF"
+sed -i "s|__KEY__|$KEY_FILE|g" "$NGINX_CONF"
+sed -i "s|__HOST__|$FQDN|g" "$COMPOSE_FILE"
+sed -i "s|__CERTDIRECTORY__|$CERT_PATH|g" "$COMPOSE_FILE"
 
 # Check required files
 MISSING_FILES=0

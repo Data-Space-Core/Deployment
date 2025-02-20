@@ -7,12 +7,12 @@ services:
       - "80:80"   # Exposes HTTP on port 80
       - "443:443" # Exposes HTTPS on port 443
     environment:
-      - OMEJDN_DOMAIN=sandbox4.collab-cloud.eu
+      - OMEJDN_DOMAIN=__HOST__
       - OMEJDN_PATH=/auth
       - UI_PATH=/
     volumes:
       - ./nginx.development.conf:/etc/nginx/nginx.conf # Nginx configuration
-      - __CERTDIR__:/etc/cert/ # SSL certificates
+      - __CERTDIRECTORY__:/etc/cert/ # SSL certificates
       - ./cert/server.crt:/etc/nginx/omejdn.cert
       - ./cert/server.key:/etc/nginx/omejdn.key
     networks:
