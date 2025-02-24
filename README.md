@@ -33,4 +33,10 @@ It also provides supporting components
 
 # Usage
 
-TBD
+Here is shor list of available user interfaces in the Deployement:
+## Conncetor
+- https://<host>/connecor/api/docs - Swagger UI for the connector
+## Broker
+- https://<host>/broker/fuseki/
+## DAPS 
+- https://<host>/
