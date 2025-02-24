@@ -7,12 +7,12 @@ services:
       - "80:80"   # Exposes HTTP on port 80
       - "443:443" # Exposes HTTPS on port 443
     environment:
-      - OMEJDN_DOMAIN=sandbox4.collab-cloud.eu
+      - OMEJDN_DOMAIN=__HOST__
       - OMEJDN_PATH=/auth
       - UI_PATH=/
     volumes:
       - ./nginx.development.conf:/etc/nginx/nginx.conf # Nginx configuration
-      - ./cert/:/etc/cert/ # SSL certificates
+      - __CERTDIRECTORY__:/etc/cert/ # SSL certificates
       - ./cert/server.crt:/etc/nginx/omejdn.cert
       - ./cert/server.key:/etc/nginx/omejdn.key
     networks:
@@ -37,8 +37,8 @@ services:
       - SHACL_VALIDATION=true
       - DAPS_VALIDATE_INCOMING=true
       - IDENTITY_JAVAKEYSTORE=isstbroker-keystore.jks
-      - COMPONENT_URI=https://sandbox4.collab-cloud.eu/broker/ # Updated for domain prefix
-      - COMPONENT_CATALOGURI=https://sandbox4.collab-cloud.eu/broker/connectors/ # Updated for domain prefix
+      - COMPONENT_URI=https://__HOST__/broker/ # Updated for domain prefix
+      - COMPONENT_CATALOGURI=https://__HOST__/broker/connectors/ # Updated for domain prefix
       - JWKS_TRUSTEDHOSTS=daps.aisec.fraunhofer.de,omejdn
     expose:
       - "8080" # Internal communication on port 8080
@@ -60,8 +60,8 @@ services:
     image: ghcr.io/fraunhofer-aisec/omejdn-server:${OMEJDN_VERSION}
     restart: unless-stopped
     environment:
-      - OMEJDN_ISSUER=https://sandbox4.collab-cloud.eu/identity/ # Updated for domain prefix
-      - OMEJDN_FRONT_URL=https://sandbox4.collab-cloud.eu/identity/ # Updated for domain prefix
+      - OMEJDN_ISSUER=https://__HOST__/identity/ # Updated for domain prefix
+      - OMEJDN_FRONT_URL=https://__HOST__/identity/ # Updated for domain prefix
       - OMEJDN_OPENID=true
       - OMEJDN_ENVIRONMENT=${OMEJDN_ENVIRONMENT}
       - OMEJDN_ACCEPT_AUDIENCE=idsc:IDS_CONNECTORS_ALL
@@ -78,8 +78,8 @@ services:
     image: ghcr.io/fraunhofer-aisec/omejdn-ui:${UI_VERSION}
     restart: unless-stopped
     environment:
-      - OIDC_ISSUER=https://sandbox4.collab-cloud.eu/identity/ # Updated for domain prefix
-      - API_URL=https://sandbox4.collab-cloud.eu/identity/api/v1 # Updated for domain prefix
+      - OIDC_ISSUER=https://__HOST__/identity/ # Updated for domain prefix
+      - API_URL=https://__HOST__/identity/api/v1 # Updated for domain prefix
       - CLIENT_ID=adminUI
     networks:
       - local
@@ -108,9 +108,9 @@ services:
     environment:
       - CONFIGURATION_PATH=/config/config.json
       - SERVER_PORT=8081
-      - DAPS_URL=https://sandbox4.collab-cloud.eu/auth
-      - DAPS_TOKEN_URL=https://sandbox4.collab-cloud.eu/auth/token
-      - DAPS_KEY_URL=https://sandbox4.collab-cloud.eu/auth/jwks.json
+      - DAPS_URL=https://__HOST__/auth
+      - DAPS_TOKEN_URL=https://__HOST__/auth/token
+      - DAPS_KEY_URL=https://__HOST__/auth/jwks.json
       - DAPS_INCOMING_DAT_DEFAULT_WELLKNOWN=/jwks.json
       - SERVER_SSLv_KEY-STORE=file:///conf/default-connector-keystore.p12
       - SPRING_DATASOURCE_URL=jdbc:postgresql://provider-connector-database:5432/connectorbdb

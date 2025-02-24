@@ -1,8 +1,7 @@
 #!/bin/bash
 
 # Login to GHCR
-sudo docker login ghcr.io -u ryan.kford@icloud.com
-
+sudo docker login ghcr.io 
 # Function to check and create a directory
 check_and_create_dir() {
   if [ ! -d "$1" ]; then
@@ -36,6 +35,44 @@ if [ -d "$OUT_FILE" ]; then
   rm -rf "$OUT_FILE"
 fi
 
+# Prepare files
+NGINX_CONF="./nginx.development.conf"
+COMPOSE_FILE="./docker-compose.yml"
+
+# Ask for the Fully Qualified Domain Name (FQDN)
+echo "Please provide the Fully Qualified Domain Name (FQDN):"
+read -r FQDN
+
+# Ask for the path to the SSL certificate directory
+echo "Please provide the path to the SSL certificates:"
+read -r CERT_PATH
+
+# Ask for the path to the SSL cert file
+echo "Please provide the name of chained public certificate file:"
+read -r CERT_FILE
+
+# Ask for the path to the SSL private key
+echo "Please provide the name of private key file:"
+read -r KEY_FILE
+
+# Check if the nginx configuration file exists
+if [[ ! -f "$NGINX_CONF" ]]; then
+    echo "Error: nginx.development.conf file not found in the current directory."
+    exit 1
+fi
+
+# Check if the docker-compose configuration file exists
+if [[ ! -f "$COMPOSE_FILE" ]]; then
+    echo "Error: docker-compose.yml file not found in the current directory."
+    exit 1
+fi
+
+sed -i "s|__HOST__|$FQDN|g" "$NGINX_CONF"
+sed -i "s|__CERT__|$CERT_FILE|g" "$NGINX_CONF"
+sed -i "s|__KEY__|$KEY_FILE|g" "$NGINX_CONF"
+sed -i "s|__HOST__|$FQDN|g" "$COMPOSE_FILE"
+sed -i "s|__CERTDIRECTORY__|$CERT_PATH|g" "$COMPOSE_FILE"
+
 # Check required files
 MISSING_FILES=0
 CERT_DIR="./cert"
@@ -50,10 +87,12 @@ for FILE in "${REQUIRED_FILES[@]}"; do
   check_file_exists "$FILE" || MISSING_FILES=$((MISSING_FILES + 1))
 done
 
+
 if [ $MISSING_FILES -ne 0 ]; then
   echo "Error: One or more required files are missing. Please check and try again."
   exit 1
 fi
+
 
 # Generate PKCS#12 file
 echo "Generating PKCS#12 file..."
