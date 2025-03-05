@@ -22,8 +22,8 @@ services:
       - broker-fuseki
       - omejdn-server
       - omejdn-ui
-      - provider-connector
-      - provider-connector-database
+      - connector
+      - connector-database
 
   # Broker Core Service - Manages data connectors and catalog
   broker-core:
@@ -84,10 +84,10 @@ services:
     networks:
       - local
 
-  # Provider Connector Database - PostgreSQL for Provider Connector
-  provider-connector-database:
+  # Connector Database - PostgreSQL for Connector
+  connector-database:
     image: postgres:13
-    container_name: provider-connector-database
+    container_name: connector-database
     ports:
       - "5433:5432" # Exposes PostgreSQL on port 5433
     environment:
@@ -95,14 +95,14 @@ services:
       - POSTGRES_PASSWORD=password
       - POSTGRES_DB=connectorbdb
     volumes:
-      - provider-connector-database:/var/lib/postgresql/data # Data persistence
+      - connector-database:/var/lib/postgresql/data # Data persistence
     networks:
       - local
 
-  # Provider Connector - Manages data provisioning with integration to PostgreSQL
-  provider-connector:
+  # Connector - Manages data provisioning with integration to PostgreSQL
+  connector:
     image: ghcr.io/data-space-core/connector/stage:latest
-    container_name: provider-connector
+    container_name: connector
     ports:
       - 8081:8081
     environment:
@@ -113,7 +113,7 @@ services:
       - DAPS_KEY_URL=https://__HOST__/auth/jwks.json
       - DAPS_INCOMING_DAT_DEFAULT_WELLKNOWN=/jwks.json
       - SERVER_SSLv_KEY-STORE=file:///conf/default-connector-keystore.p12
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://provider-connector-database:5432/connectorbdb
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://connector-database:5432/connectorbdb
       - SPRING_DATASOURCE_USERNAME=postgresuserb
       - SPRING_DATASOURCE_PASSWORD=password
       - SPRING_DATASOURCE_PLATFORM=postgres
@@ -126,11 +126,11 @@ services:
     networks:
       - local
     depends_on:
-      - provider-connector-database
+      - connector-database
 
 volumes:
   broker-fuseki: # Volume for Fuseki data
-  provider-connector-database: # Volume for Provider Connector data
+  connector-database: # Volume for Connector data
 
 networks:
   local:
