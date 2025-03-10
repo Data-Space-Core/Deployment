@@ -1,6 +1,6 @@
 ---
-issuer: https://sandbox4.collab-cloud.eu/identity/
-front_url: https://sandbox4.collab-cloud.eu/identity/
+issuer: https://__HOST__/identity/
+front_url: https://__HOST__/identity/
 bind_to: 0.0.0.0:4567
 environment: development
 openid: true
