@@ -27,7 +27,7 @@ services:
 
   # Broker Core Service - Manages data connectors and catalog
   broker-core:
-    image: registry.gitlab.cc-asp.fraunhofer.de/eis-ids/broker-open/core:5.0.0
+    image: ghcr.io/data-space-core/dsil-idsa-broker/core:latest
     volumes:
       - ./cert/:/etc/cert/ # SSL certificates
     restart: always
@@ -47,7 +47,7 @@ services:
 
   # Fuseki Service - Provides SPARQL endpoint for Broker Core
   broker-fuseki:
-    image: registry.gitlab.cc-asp.fraunhofer.de/eis-ids/broker-open/fuseki
+    image: ghcr.io/data-space-core/dsil-idsa-broker/fuseki:latest
     volumes:
       - broker-fuseki:/fuseki
     expose:
