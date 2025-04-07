@@ -12,15 +12,14 @@ check_and_create_dir() {
   fi
 }
 
-# Function to check if a file exists
 check_file_exists() {
-  if [ ! -f "$1" ]; then
-    echo "Error: Required file $1 is missing!"
-    return 1
-  else
-    echo "File $1 exists."
-    return 0
-  fi
+    if ! sudo test -f "$1"; then
+        echo "Error: Required file $1 is missing or inaccessible!"
+        return 1
+    else
+        echo "File $1 exists."
+        return 0
+    fi
 }
 
 # Check required directories
@@ -38,6 +37,7 @@ fi
 # Prepare files
 NGINX_CONF="./nginx.development.conf"
 COMPOSE_FILE="./docker-compose.yml"
+CONNECTORCONF="./conf/config.json"
 
 # Ask for the Fully Qualified Domain Name (FQDN)
 echo "Please provide the Fully Qualified Domain Name (FQDN):"
@@ -48,12 +48,16 @@ echo "Please provide the path to the SSL certificates:"
 read -r CERT_PATH
 
 # Ask for the path to the SSL cert file
-echo "Please provide the name of chained public certificate file:"
+echo "Please provide the name of public certificate file:"
 read -r CERT_FILE
 
 # Ask for the path to the SSL private key
 echo "Please provide the name of private key file:"
 read -r KEY_FILE
+
+# Ask for the path to chained SSL public key
+echo "Please provide the name of chained public certificate file:"
+read -r CHAIN_FILE
 
 # Check if the nginx configuration file exists
 if [[ ! -f "$NGINX_CONF" ]]; then
@@ -68,18 +72,18 @@ if [[ ! -f "$COMPOSE_FILE" ]]; then
 fi
 
 sed -i "s|__HOST__|$FQDN|g" "$NGINX_CONF"
-sed -i "s|__CERT__|$CERT_FILE|g" "$NGINX_CONF"
+sed -i "s|__CERT__|$CHAIN_FILE|g" "$NGINX_CONF"
 sed -i "s|__KEY__|$KEY_FILE|g" "$NGINX_CONF"
 sed -i "s|__HOST__|$FQDN|g" "$COMPOSE_FILE"
-sed -i "s|__HOST__|$FQDN|g" config/omejdn.yml
+sed -i "s|__HOST__|$FQDN|g" "$CONNECTORCONF"
 sed -i "s|__CERTDIRECTORY__|$CERT_PATH|g" "$COMPOSE_FILE"
 
 # Check required files
 MISSING_FILES=0
 CERT_DIR="./cert"
 REQUIRED_FILES=(
-  "$CERT_DIR/server.key"
-  "$CERT_DIR/server.crt"
+  "$CERT_PATH/$KEY_FILE"
+  "$CERT_PATH/$CERT_FILE"
   "./conf/config.json"
   "./conf/truststore.p12"
 )
@@ -94,42 +98,14 @@ if [ $MISSING_FILES -ne 0 ]; then
   exit 1
 fi
 
-
-# Generate PKCS#12 file
-echo "Generating PKCS#12 file..."
-openssl pkcs12 -export -out "$OUT_FILE" \
-    -inkey "$CERT_DIR/server.key" \
-    -in "$CERT_DIR/server.crt" \
-    -passout pass:password
-
-if [ $? -eq 0 ]; then
-  echo "PKCS#12 file successfully generated at $OUT_FILE"
-else
-  echo "Error: Failed to generate PKCS#12 file."
-  exit 1
-fi
-
-# Ensure proper permissions for the `conf` directory and `default-connector-keystore.p12`
-echo "Setting permissions for the 'conf' directory and its files..."
-chmod -R 777 ./conf
-chown -R $(id -u):$(id -g) ./conf
-
-# Reminder for configuration
-echo "Please ensure that the produced file name matches the connector's config.json:"
-echo '  "ids:keyStore" : {'
-echo '    "@id" : "file:///conf/default-connector-keystore.p12"'
-echo '  }'
-echo "If needed, rename the generated file to 'default-connector-keystore.p12' or update the configuration."
-
 # Register connector to DAPS
 REGISTER_SCRIPT="scripts/register.sh"
 CONNECTOR_NAME="default-connector"
-SECURITY_PROFILE="BASE_SECURITY_PROFILE"
-CERT_FILE="$CERT_DIR/server.crt"
+SECURITY_PROFILE="idsc:BASE_SECURITY_PROFILE"
 
 if [ -x "$REGISTER_SCRIPT" ]; then
   echo "Registering connector to DAPS..."
-  $REGISTER_SCRIPT "$CONNECTOR_NAME" "$SECURITY_PROFILE" "$CERT_FILE"
+  $REGISTER_SCRIPT "$CONNECTOR_NAME" "$SECURITY_PROFILE" "$CERT_PATH/$CERT_FILE"
 
   if [ $? -eq 0 ]; then
     echo "Connector successfully registered to DAPS!"
@@ -141,6 +117,32 @@ else
   echo "Error: Registration script $REGISTER_SCRIPT not found or not executable."
   exit 1
 fi
+
+# Generate PKCS#12 file
+echo "Generating PKCS#12 file..."
+openssl pkcs12 -export -out "$OUT_FILE" \
+    -inkey "$CERT_PATH/$KEY_FILE" \
+    -in "$CERT_PATH/$CERT_FILE" \
+    -passout pass:password
+
+if [ $? -eq 0 ]; then
+  echo "PKCS#12 file successfully generated at $OUT_FILE"
+else
+  echo "Error: Failed to generate PKCS#12 file."
+  exit 1
+fi
+
+# Ensure proper permissions for the `conf` directory and `default-connector-keystore.p12`
+echo "Setting permissions for the 'conf' directory and its files..."
+sudo chmod -R 755 ./conf
+sudo chown -R $(id -u):$(id -g) ./conf
+
+# Reminder for configuration
+echo "Please ensure that the produced file name matches the connector's config.json:"
+echo '  "ids:keyStore" : {'
+echo '    "@id" : "file:///conf/default-connector-keystore.p12"'
+echo '  }'
+echo "If needed, rename the generated file to 'default-connector-keystore.p12' or update the configuration."
 
 # Docker Compose operations
 echo "Stopping and removing existing containers..."

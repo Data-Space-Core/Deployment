@@ -14,8 +14,6 @@ services:
     volumes:
       - ./nginx.development.conf:/etc/nginx/nginx.conf # Nginx configuration
       - __CERTDIRECTORY__:/etc/cert/ # SSL certificates
-      - ./cert/server.crt:/etc/nginx/omejdn.cert
-      - ./cert/server.key:/etc/nginx/omejdn.key
     networks:
       - local
     depends_on:
@@ -28,10 +26,10 @@ services:
 
   # Broker Core Service - Manages data connectors and catalog
   broker-core:
-    image: registry.gitlab.cc-asp.fraunhofer.de/eis-ids/broker-open/core:5.0.0
+    image: ghcr.io/data-space-core/dsil-idsa-broker/core:latest
     container_name: broker
     volumes:
-      - ./cert/:/etc/cert/ # SSL certificates
+      - __CERTDIRECTORY__:/etc/cert/ # SSL certificates
     restart: always
     environment:
       - SPARQL_ENDPOINT=http://broker-fuseki:3030/connectorData # Use container name for Fuseki
@@ -49,7 +47,7 @@ services:
 
   # Fuseki Service - Provides SPARQL endpoint for Broker Core
   broker-fuseki:
-    image: registry.gitlab.cc-asp.fraunhofer.de/eis-ids/broker-open/fuseki
+    image: ghcr.io/data-space-core/dsil-idsa-broker/fuseki:latest
     volumes:
       - broker-fuseki:/fuseki
     expose:
