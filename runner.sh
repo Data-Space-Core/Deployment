@@ -104,7 +104,7 @@ CONNECTOR_NAME="default-connector"
 SECURITY_PROFILE="idsc:BASE_SECURITY_PROFILE"
 
 if [ -x "$REGISTER_SCRIPT" ]; then
-  echo "Registering connector to DAPS..."
+  echo "Registering connector to DAPS... with certificate at $CERT_PATH/$CERT_FILE"
   $REGISTER_SCRIPT "$CONNECTOR_NAME" "$SECURITY_PROFILE" "$CERT_PATH/$CERT_FILE"
 
   if [ $? -eq 0 ]; then
@@ -119,7 +119,7 @@ else
 fi
 
 # Generate PKCS#12 file
-echo "Generating PKCS#12 file..."
+echo "Generating Connector PKCS#12 file..."
 openssl pkcs12 -export -out "$OUT_FILE" \
     -inkey "$CERT_PATH/$KEY_FILE" \
     -in "$CERT_PATH/$CERT_FILE" \
@@ -131,6 +131,40 @@ else
   echo "Error: Failed to generate PKCS#12 file."
   exit 1
 fi
+
+# Register Broker with DAPS
+CONNECTOR_NAME="default-broker"
+SECURITY_PROFILE="idsc:BASE_SECURITY_PROFILE"
+
+if [ -x "$REGISTER_SCRIPT" ]; then
+  echo "Registering broker to DAPS... with certificate at $CERT_PATH/$CERT_FILE"
+  $REGISTER_SCRIPT "$CONNECTOR_NAME" "$SECURITY_PROFILE" "$CERT_PATH/$CERT_FILE"
+
+  if [ $? -eq 0 ]; then
+    echo "Connector successfully registered to DAPS!"
+  else
+    echo "Error: Failed to register connector to DAPS."
+    exit 1
+  fi
+else
+  echo "Error: Registration script $REGISTER_SCRIPT not found or not executable."
+  exit 1
+fi
+
+# Generate PKCS#12 file
+echo "Generating Broker PKCS#12 file..."
+openssl pkcs12 -export -out ./cert/isstbroker-keystore.p12 \
+    -inkey "$CERT_PATH/$KEY_FILE" \
+    -in "./keys/$CONNECTOR_NAME.cert" \
+    -passout pass:password
+if [ $? -eq 0 ]; then
+  echo "PKCS#12 file successfully generated at $OUT_FILE"
+else
+  echo "Error: Failed to generate PKCS#12 file."
+  exit 1
+fi
+sudo chmod -R 644 ./cert/*
+keytool -importkeystore -srckeystore ./cert/isstbroker-keystore.p12 -srcstoretype PKCS12 -destkeystore ./cert/isstbroker-keystore.jks -deststoretype JKS -srcstorepass password -deststorepass password
 
 # Ensure proper permissions for the `conf` directory and `default-connector-keystore.p12`
 echo "Setting permissions for the 'conf' directory and its files..."
