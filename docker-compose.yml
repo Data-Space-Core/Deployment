@@ -57,7 +57,7 @@ services:
 
   # Omejdn Server - Handles OAuth2 and OpenID authentication
   omejdn-server:
-    image: ghcr.io/fraunhofer-aisec/omejdn-server:${OMEJDN_VERSION}
+    image: ghcr.io/data-space-core/dsil-omejdn-server/omejdn-server:latest
     container_name: daps
     hostname: daps
     restart: unless-stopped
