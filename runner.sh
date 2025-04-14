@@ -42,22 +42,62 @@ CONNECTORCONF="./conf/config.json"
 # Ask for the Fully Qualified Domain Name (FQDN)
 echo "Please provide the Fully Qualified Domain Name (FQDN):"
 read -r FQDN
+# If FQDN is empty, try to auto-detect it
+if [[ -z "$FQDN" ]]; then
+  SERVER_IP=$(ip addr show scope global | grep 'inet ' | awk '{print $2}' | cut -d'/' -f1 | head -n1)
+  if [[ -z "$SERVER_IP" ]]; then
+    echo "❌ Could not determine the server's IP address."
+    exit 1
+  fi
+
+  # Use dig to resolve FQDN from IP
+  FQDN=$(dig +short -x "$SERVER_IP" | sed 's/\.$//')
+
+  if [[ -z "$FQDN" ]]; then
+    echo "❌ Could not resolve FQDN from IP address ($SERVER_IP)."
+    exit 1
+  fi
+
+  echo "✅ Auto-detected FQDN: $FQDN"
+else
+  echo "✅ Using provided FQDN: $FQDN"
+fi
 
 # Ask for the path to the SSL certificate directory
 echo "Please provide the path to the SSL certificates:"
 read -r CERT_PATH
+# Check if directory exists
+if [[ ! -d "$CERT_PATH" ]]; then
+  echo "❌ Directory does not exist: $CERT_PATH"
+  exit 1
+fi
 
 # Ask for the path to the SSL cert file
 echo "Please provide the name of public certificate file:"
 read -r CERT_FILE
-
+# Check if file exists
+if [[ ! -f "$CERT_PATH/$CERT_FILE" ]]; then
+  echo "❌ Public certificate file not found: $CERT_PATH/$CERT_FILE"
+  exit 1
+fi
 # Ask for the path to the SSL private key
 echo "Please provide the name of private key file:"
 read -r KEY_FILE
+# Check if file exists
+if [[ ! -f "$CERT_PATH/$KEY_FILE" ]]; then
+  echo "❌ Private key file not found: $CERT_PATH/$KEY_FILE"
+  exit 1
+fi
 
 # Ask for the path to chained SSL public key
 echo "Please provide the name of chained public certificate file:"
 read -r CHAIN_FILE
+
+# Check if file exists
+if [[ ! -f "$CERT_PATH/$CHAIN_FILE" ]]; then
+  echo "❌ Chained certificate file not found: $CERT_PATH/$CHAIN_FILE"
+  exit 1
+fi
 
 # Check if the nginx configuration file exists
 if [[ ! -f "$NGINX_CONF" ]]; then
