@@ -1,0 +1,166 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number:
+            97:71:a1:07:74:04:36:a3:1b:52:a7:e8:dd:9c:28:73
+        Signature Algorithm: sha256WithRSAEncryption
+        Issuer: C = GB, ST = Greater Manchester, L = Salford, O = Sectigo Limited, CN = Sectigo RSA Domain Validation Secure Server CA
+        Validity
+            Not Before: Feb 29 00:00:00 2024 GMT
+            Not After : Mar 31 23:59:59 2025 GMT
+        Subject: CN = *.collab-cloud.eu
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+                Public-Key: (4096 bit)
+                Modulus:
+                    00:d8:b1:5b:52:45:56:65:d0:10:55:67:b8:75:4d:
+                    73:fd:07:da:4e:fc:32:f8:57:73:4b:2b:15:4d:7d:
+                    45:17:1d:a7:ce:58:e6:28:9d:0f:9f:c4:85:4d:86:
+                    ad:57:00:c2:7f:51:46:35:36:3e:d2:92:4e:ef:05:
+                    58:cb:b2:28:c9:db:b3:31:08:07:28:86:e6:06:a4:
+                    ec:e7:f3:94:59:66:c5:43:81:e8:0b:f6:35:af:e1:
+                    5d:d1:3f:bb:3d:18:a8:21:d8:c1:54:e3:61:ca:d7:
+                    c6:b1:41:cc:57:6b:6b:07:b7:8f:fd:ad:b5:ce:d6:
+                    d0:92:1d:76:2c:72:6e:1a:c9:d2:cf:77:f0:d9:e1:
+                    d8:b7:64:33:1c:9a:c9:97:63:c0:68:8b:ed:69:bd:
+                    56:92:e9:29:20:e4:68:b6:d6:c2:08:25:9f:5f:9f:
+                    98:1d:7c:9c:c9:ae:c8:08:3b:77:72:da:d1:4f:32:
+                    3d:a1:10:56:d0:33:13:d1:fc:22:b4:32:cf:5f:aa:
+                    96:8d:f2:48:e9:97:bc:44:f7:f3:76:dc:3e:f5:12:
+                    72:3b:ef:b6:cf:bf:1e:00:4a:96:0b:9a:eb:6e:39:
+                    5c:80:4a:99:d2:66:52:c7:1f:f9:a3:11:07:50:6d:
+                    35:ca:1a:3c:a7:e5:d1:5a:8d:10:14:e9:d1:29:ee:
+                    a8:67:bc:6d:59:ce:64:7d:1f:f0:64:38:46:6d:02:
+                    a3:8c:80:cd:99:64:8b:68:75:a7:22:c1:4a:0c:f9:
+                    5c:29:4c:2b:ab:a3:c4:ee:0f:e6:de:6c:ed:fb:fc:
+                    6a:b6:33:db:a8:e9:b1:44:b8:8d:71:f0:75:46:ff:
+                    e6:5a:71:07:3e:91:87:76:3a:b7:55:fb:b0:f5:ad:
+                    ea:8c:6d:75:8b:f7:8f:89:e2:3c:79:e6:95:3c:e4:
+                    c7:c4:e8:86:21:aa:b8:3e:eb:3e:cc:7b:f8:ce:ec:
+                    64:ce:b6:bb:3a:10:29:ce:c7:3a:0b:6d:e8:65:68:
+                    85:c0:af:82:f2:22:75:94:a3:8d:7f:de:4a:e0:99:
+                    9d:70:c4:6a:f9:83:ec:cc:ce:b0:ef:7f:9d:e5:a6:
+                    ec:b4:c9:ff:fd:99:b9:81:f5:fa:64:d0:db:61:25:
+                    7c:c0:22:dc:56:53:f7:a2:e2:6b:47:60:d3:77:9c:
+                    2e:07:46:5d:bf:b1:b4:4b:9c:58:73:88:b1:31:ea:
+                    04:aa:46:da:d4:fe:13:20:d4:31:5e:c0:25:b8:f5:
+                    a1:8f:d8:70:66:88:47:d0:be:cb:b8:d5:8d:2c:79:
+                    13:95:49:7e:e2:e5:5a:6c:f2:be:77:41:27:e2:a1:
+                    00:a0:99:54:e1:b5:ce:ec:aa:c6:4c:e7:c7:b9:b5:
+                    f3:6f:e1
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Authority Key Identifier: 
+                8D:8C:5E:C4:54:AD:8A:E1:77:E9:9B:F9:9B:05:E1:B8:01:8D:61:E1
+            X509v3 Subject Key Identifier: 
+                7D:A7:B7:0D:4F:4B:58:E5:C0:DB:E3:0D:00:84:FE:91:6F:98:10:20
+            X509v3 Key Usage: critical
+                Digital Signature, Key Encipherment
+            X509v3 Basic Constraints: critical
+                CA:FALSE
+            X509v3 Extended Key Usage: 
+                TLS Web Server Authentication, TLS Web Client Authentication
+            X509v3 Certificate Policies: 
+                Policy: 1.3.6.1.4.1.6449.1.2.2.7
+                  CPS: https://sectigo.com/CPS
+                Policy: 2.23.140.1.2.1
+            Authority Information Access: 
+                CA Issuers - URI:http://crt.sectigo.com/SectigoRSADomainValidationSecureServerCA.crt
+                OCSP - URI:http://ocsp.sectigo.com
+            X509v3 Subject Alternative Name: 
+                DNS:*.collab-cloud.eu, DNS:collab-cloud.eu
+            CT Precertificate SCTs: 
+                Signed Certificate Timestamp:
+                    Version   : v1 (0x0)
+                    Log ID    : CF:11:56:EE:D5:2E:7C:AF:F3:87:5B:D9:69:2E:9B:E9:
+                                1A:71:67:4A:B0:17:EC:AC:01:D2:5B:77:CE:CC:3B:08
+                    Timestamp : Feb 29 08:08:10.943 2024 GMT
+                    Extensions: none
+                    Signature : ecdsa-with-SHA256
+                                30:45:02:21:00:D3:73:A4:5B:79:25:F5:A4:C8:5C:3B:
+                                52:47:21:25:56:60:65:4C:86:B5:96:72:18:7C:E2:20:
+                                4F:97:28:A6:0B:02:20:6A:98:22:E6:40:47:53:CF:14:
+                                C2:D7:BA:74:B0:FF:6E:F4:6C:12:F2:C1:8B:C1:73:B9:
+                                E3:00:B1:01:34:26:5E
+                Signed Certificate Timestamp:
+                    Version   : v1 (0x0)
+                    Log ID    : A2:E3:0A:E4:45:EF:BD:AD:9B:7E:38:ED:47:67:77:53:
+                                D7:82:5B:84:94:D7:2B:5E:1B:2C:C4:B9:50:A4:47:E7
+                    Timestamp : Feb 29 08:08:11.054 2024 GMT
+                    Extensions: none
+                    Signature : ecdsa-with-SHA256
+                                30:44:02:20:11:5A:52:F1:BC:D1:33:25:DF:CF:AB:02:
+                                D9:78:6B:5F:DC:F1:1D:A0:A2:B8:96:35:66:DC:76:B7:
+                                9C:B6:31:AB:02:20:71:C9:60:54:CB:FD:CA:44:7B:06:
+                                76:70:F5:3A:A2:3B:03:E9:A0:2B:E7:48:07:E4:31:02:
+                                EC:FA:C6:03:44:03
+                Signed Certificate Timestamp:
+                    Version   : v1 (0x0)
+                    Log ID    : 4E:75:A3:27:5C:9A:10:C3:38:5B:6C:D4:DF:3F:52:EB:
+                                1D:F0:E0:8E:1B:8D:69:C0:B1:FA:64:B1:62:9A:39:DF
+                    Timestamp : Feb 29 08:08:10.990 2024 GMT
+                    Extensions: none
+                    Signature : ecdsa-with-SHA256
+                                30:44:02:20:2A:3F:3E:FF:E2:07:3E:0D:75:9E:40:85:
+                                80:24:54:EB:5D:5A:7F:2A:BA:90:2B:35:E3:F9:E8:57:
+                                47:52:43:CA:02:20:33:E5:1A:D5:8F:AB:39:A4:0B:22:
+                                08:89:F3:AA:23:90:CC:00:D4:78:77:87:E4:65:E0:43:
+                                56:B4:85:89:87:25
+    Signature Algorithm: sha256WithRSAEncryption
+    Signature Value:
+        3b:a7:24:37:ed:1a:c1:72:4d:2e:e8:28:99:9c:2d:5c:96:66:
+        c1:d5:c6:ae:fb:28:cc:f3:a9:f3:85:a8:1c:28:e5:ea:0f:34:
+        64:7b:be:30:91:58:fe:2b:e2:f5:ad:2f:04:fe:be:96:04:7b:
+        8c:91:48:49:40:e7:1d:d6:74:7b:a7:b6:f6:54:65:ff:d7:06:
+        00:6f:13:c7:43:02:25:ea:3a:71:4a:9e:49:b4:0b:af:19:3d:
+        ec:35:d3:e1:9e:2e:b3:0e:f8:b0:ba:5b:f6:89:b6:0a:9f:12:
+        b0:5e:17:1b:9d:ef:08:8f:ae:c1:4f:c2:9b:a9:72:5f:39:22:
+        c2:ec:2e:31:ef:e2:29:53:36:43:66:16:84:70:a8:c8:98:3c:
+        ce:44:00:15:60:ef:40:00:50:96:ef:c0:8f:db:69:00:a6:82:
+        82:60:51:f2:9e:bc:36:96:df:e4:05:a7:2d:52:29:73:d1:ec:
+        51:cb:60:31:23:8e:be:67:21:a4:1e:dd:62:05:03:fa:b1:3f:
+        77:4b:74:e5:70:ac:11:91:73:58:99:80:b4:43:e2:ce:74:01:
+        f1:ed:37:19:37:5b:6f:01:37:43:71:88:a1:08:ce:15:53:c9:
+        2a:c4:9f:79:a5:8c:0a:b4:ea:ee:cf:69:2b:21:6d:b1:c7:bc:
+        78:9d:5d:db
+-----BEGIN CERTIFICATE-----
+MIIHOzCCBiOgAwIBAgIRAJdxoQd0BDajG1Kn6N2cKHMwDQYJKoZIhvcNAQELBQAw
+gY8xCzAJBgNVBAYTAkdCMRswGQYDVQQIExJHcmVhdGVyIE1hbmNoZXN0ZXIxEDAO
+BgNVBAcTB1NhbGZvcmQxGDAWBgNVBAoTD1NlY3RpZ28gTGltaXRlZDE3MDUGA1UE
+AxMuU2VjdGlnbyBSU0EgRG9tYWluIFZhbGlkYXRpb24gU2VjdXJlIFNlcnZlciBD
+QTAeFw0yNDAyMjkwMDAwMDBaFw0yNTAzMzEyMzU5NTlaMBwxGjAYBgNVBAMMESou
+Y29sbGFiLWNsb3VkLmV1MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEA
+2LFbUkVWZdAQVWe4dU1z/QfaTvwy+FdzSysVTX1FFx2nzljmKJ0Pn8SFTYatVwDC
+f1FGNTY+0pJO7wVYy7IoyduzMQgHKIbmBqTs5/OUWWbFQ4HoC/Y1r+Fd0T+7PRio
+IdjBVONhytfGsUHMV2trB7eP/a21ztbQkh12LHJuGsnSz3fw2eHYt2QzHJrJl2PA
+aIvtab1WkukpIORottbCCCWfX5+YHXycya7ICDt3ctrRTzI9oRBW0DMT0fwitDLP
+X6qWjfJI6Ze8RPfzdtw+9RJyO++2z78eAEqWC5rrbjlcgEqZ0mZSxx/5oxEHUG01
+yho8p+XRWo0QFOnRKe6oZ7xtWc5kfR/wZDhGbQKjjIDNmWSLaHWnIsFKDPlcKUwr
+q6PE7g/m3mzt+/xqtjPbqOmxRLiNcfB1Rv/mWnEHPpGHdjq3Vfuw9a3qjG11i/eP
+ieI8eeaVPOTHxOiGIaq4Pus+zHv4zuxkzra7OhApzsc6C23oZWiFwK+C8iJ1lKON
+f95K4JmdcMRq+YPszM6w73+d5abstMn//Zm5gfX6ZNDbYSV8wCLcVlP3ouJrR2DT
+d5wuB0Zdv7G0S5xYc4ixMeoEqkba1P4TINQxXsAluPWhj9hwZohH0L7LuNWNLHkT
+lUl+4uVabPK+d0En4qEAoJlU4bXO7KrGTOfHubXzb+ECAwEAAaOCAwIwggL+MB8G
+A1UdIwQYMBaAFI2MXsRUrYrhd+mb+ZsF4bgBjWHhMB0GA1UdDgQWBBR9p7cNT0tY
+5cDb4w0AhP6Rb5gQIDAOBgNVHQ8BAf8EBAMCBaAwDAYDVR0TAQH/BAIwADAdBgNV
+HSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwSQYDVR0gBEIwQDA0BgsrBgEEAbIx
+AQICBzAlMCMGCCsGAQUFBwIBFhdodHRwczovL3NlY3RpZ28uY29tL0NQUzAIBgZn
+gQwBAgEwgYQGCCsGAQUFBwEBBHgwdjBPBggrBgEFBQcwAoZDaHR0cDovL2NydC5z
+ZWN0aWdvLmNvbS9TZWN0aWdvUlNBRG9tYWluVmFsaWRhdGlvblNlY3VyZVNlcnZl
+ckNBLmNydDAjBggrBgEFBQcwAYYXaHR0cDovL29jc3Auc2VjdGlnby5jb20wLQYD
+VR0RBCYwJIIRKi5jb2xsYWItY2xvdWQuZXWCD2NvbGxhYi1jbG91ZC5ldTCCAXwG
+CisGAQQB1nkCBAIEggFsBIIBaAFmAHYAzxFW7tUufK/zh1vZaS6b6RpxZ0qwF+ys
+AdJbd87MOwgAAAGN8+gZvwAABAMARzBFAiEA03OkW3kl9aTIXDtSRyElVmBlTIa1
+lnIYfOIgT5copgsCIGqYIuZAR1PPFMLXunSw/270bBLywYvBc7njALEBNCZeAHUA
+ouMK5EXvva2bfjjtR2d3U9eCW4SU1yteGyzEuVCkR+cAAAGN8+gaLgAABAMARjBE
+AiARWlLxvNEzJd/PqwLZeGtf3PEdoKK4ljVm3Ha3nLYxqwIgcclgVMv9ykR7BnZw
+9TqiOwPpoCvnSAfkMQLs+sYDRAMAdQBOdaMnXJoQwzhbbNTfP1LrHfDgjhuNacCx
++mSxYpo53wAAAY3z6BnuAAAEAwBGMEQCICo/Pv/iBz4NdZ5AhYAkVOtdWn8qupAr
+NeP56FdHUkPKAiAz5RrVj6s5pAsiCInzqiOQzADUeHeH5GXgQ1a0hYmHJTANBgkq
+hkiG9w0BAQsFAAOCAQEAO6ckN+0awXJNLugomZwtXJZmwdXGrvsozPOp84WoHCjl
+6g80ZHu+MJFY/ivi9a0vBP6+lgR7jJFISUDnHdZ0e6e29lRl/9cGAG8Tx0MCJeo6
+cUqeSbQLrxk97DXT4Z4usw74sLpb9om2Cp8SsF4XG53vCI+uwU/Cm6lyXzkiwuwu
+Me/iKVM2Q2YWhHCoyJg8zkQAFWDvQABQlu/Aj9tpAKaCgmBR8p68Npbf5AWnLVIp
+c9HsUctgMSOOvmchpB7dYgUD+rE/d0t05XCsEZFzWJmAtEPiznQB8e03GTdbbwE3
+Q3GIoQjOFVPJKsSfeaWMCrTq7s9pKyFtsce8eJ1d2w==
+-----END CERTIFICATE-----

@@ -2,6 +2,7 @@ services:
   # Nginx Reverse Proxy for handling HTTP and HTTPS traffic
   nginx:
     image: nginx:latest
+    container_name: nginx
     restart: unless-stopped
     ports:
       - "80:80"   # Exposes HTTP on port 80
@@ -13,8 +14,6 @@ services:
     volumes:
       - ./nginx.development.conf:/etc/nginx/nginx.conf # Nginx configuration
       - __CERTDIRECTORY__:/etc/cert/ # SSL certificates
-      - ./cert/server.crt:/etc/nginx/omejdn.cert
-      - ./cert/server.key:/etc/nginx/omejdn.key
     networks:
       - local
     depends_on:
@@ -28,8 +27,9 @@ services:
   # Broker Core Service - Manages data connectors and catalog
   broker-core:
     image: ghcr.io/data-space-core/dsil-idsa-broker/core:latest
+    container_name: broker
     volumes:
-      - ./cert/:/etc/cert/ # SSL certificates
+      - __CERTDIRECTORY__:/etc/cert/ # SSL certificates
     restart: always
     environment:
       - SPARQL_ENDPOINT=http://broker-fuseki:3030/connectorData # Use container name for Fuseki
@@ -39,7 +39,7 @@ services:
       - IDENTITY_JAVAKEYSTORE=isstbroker-keystore.jks
       - COMPONENT_URI=https://__HOST__/broker/ # Updated for domain prefix
       - COMPONENT_CATALOGURI=https://__HOST__/broker/connectors/ # Updated for domain prefix
-      - JWKS_TRUSTEDHOSTS=daps.aisec.fraunhofer.de,omejdn
+      - JWKS_TRUSTEDHOSTS=__HOST__,daps
     expose:
       - "8080" # Internal communication on port 8080
     networks:
@@ -58,6 +58,8 @@ services:
   # Omejdn Server - Handles OAuth2 and OpenID authentication
   omejdn-server:
     image: ghcr.io/fraunhofer-aisec/omejdn-server:${OMEJDN_VERSION}
+    container_name: daps
+    hostname: daps
     restart: unless-stopped
     environment:
       - OMEJDN_ISSUER=https://__HOST__/identity/ # Updated for domain prefix
