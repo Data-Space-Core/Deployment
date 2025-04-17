@@ -32,14 +32,16 @@ services:
       - __CERTDIRECTORY__:/etc/cert/ # SSL certificates
     restart: always
     environment:
+      - IDENTITY_JAVAKEYSTORE=/etc/cert/isstbroker-keystore.jks
       - SPARQL_ENDPOINT=http://broker-fuseki:3030/connectorData # Use container name for Fuseki
       - ELASTICSEARCH_HOSTNAME=broker-elasticsearch
       - SHACL_VALIDATION=true
       - DAPS_VALIDATE_INCOMING=true
-      - IDENTITY_JAVAKEYSTORE=isstbroker-keystore.jks
       - COMPONENT_URI=https://__HOST__/broker/ # Updated for domain prefix
       - COMPONENT_CATALOGURI=https://__HOST__/broker/connectors/ # Updated for domain prefix
       - JWKS_TRUSTEDHOSTS=__HOST__,daps
+      - DAPS_URL=https://__HOST__/auth
+      - DAPS_JWKS_URL=https://__HOST__/auth/jwks.json
     expose:
       - "8080" # Internal communication on port 8080
     networks:
@@ -62,8 +64,8 @@ services:
     hostname: daps
     restart: unless-stopped
     environment:
-      - OMEJDN_ISSUER=https://__HOST__/identity/ # Updated for domain prefix
-      - OMEJDN_FRONT_URL=https://__HOST__/identity/ # Updated for domain prefix
+      - OMEJDN_ISSUER=https://__HOST__/auth # Updated for domain prefix
+      - OMEJDN_FRONT_URL=https://__HOST__/auth # Updated for domain prefix
       - OMEJDN_OPENID=true
       - OMEJDN_ENVIRONMENT=${OMEJDN_ENVIRONMENT}
       - OMEJDN_ACCEPT_AUDIENCE=idsc:IDS_CONNECTORS_ALL
@@ -80,8 +82,8 @@ services:
     image: ghcr.io/fraunhofer-aisec/omejdn-ui:${UI_VERSION}
     restart: unless-stopped
     environment:
-      - OIDC_ISSUER=https://__HOST__/identity/ # Updated for domain prefix
-      - API_URL=https://__HOST__/identity/api/v1 # Updated for domain prefix
+      - OIDC_ISSUER=https://__HOST__/auth/ # Updated for domain prefix
+      - API_URL=https://__HOST__/auth/api/v1 # Updated for domain prefix
       - CLIENT_ID=adminUI
     networks:
       - local
