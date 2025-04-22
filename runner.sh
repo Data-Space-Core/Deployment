@@ -117,7 +117,7 @@ sed -i "s|__KEY__|$KEY_FILE|g" "$NGINX_CONF"
 sed -i "s|__HOST__|$FQDN|g" "$COMPOSE_FILE"
 sed -i "s|__HOST__|$FQDN|g" "$CONNECTORCONF"
 sed -i "s|__CERTDIRECTORY__|$CERT_PATH|g" "$COMPOSE_FILE"
-
+sed -i "s|__HOST__|$FQDN|g" "./config/omejdn.yml"
 # Check required files
 MISSING_FILES=0
 CERT_DIR="./cert"
