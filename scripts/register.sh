@@ -1,5 +1,7 @@
 #!/bin/sh
 
+mkdir -p keys/clients
+
 if [ ! $# -ge 1 ] || [ ! $# -le 3 ]; then
     echo "Usage: $0 NAME (SECURITY_PROFILE) (CERTFILE)"
     exit 1
@@ -47,5 +49,4 @@ cat >> config/clients.yml <<EOF
     value: $CLIENT_CERT_SHA
 EOF
 
-mkdir -p keys/clients
 cp "$CLIENT_CERT" keys/clients/${CLIENT_ID}.cert
