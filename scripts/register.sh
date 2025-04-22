@@ -47,4 +47,5 @@ cat >> config/clients.yml <<EOF
     value: $CLIENT_CERT_SHA
 EOF
 
+mkdir -p keys/clients
 cp "$CLIENT_CERT" keys/clients/${CLIENT_ID}.cert
