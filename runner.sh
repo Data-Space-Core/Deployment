@@ -205,7 +205,7 @@ else
 fi
 sudo chmod -R 644 ./cert/*
 keytool -importkeystore -srckeystore ./cert/isstbroker-keystore.p12 -srcstoretype PKCS12 -destkeystore ./cert/isstbroker-keystore.jks -deststoretype JKS -srcstorepass password -deststorepass password
-
+sudo cp ./cert/isstbroker-keystore.jks $CERT_PATH/
 # Ensure proper permissions for the `conf` directory and `default-connector-keystore.p12`
 echo "Setting permissions for the 'conf' directory and its files..."
 sudo chmod -R 755 ./conf
