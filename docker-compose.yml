@@ -61,7 +61,8 @@ services:
 
   omejdn-server:
     image: ghcr.io/data-space-core/dsil-omejdn-server/omejdn-server:latest
-    container_name: omejdn-server
+    container_name: daps
+    hostname: daps
     restart: unless-stopped
     expose:
       - "4567"
