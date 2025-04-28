@@ -136,7 +136,7 @@ services:
     image: postgres:13
     container_name: consume-connector-database
     ports:
-      - "5433:5432" # Exposes PostgreSQL on port 5433
+      - "5434:5432" # Exposes PostgreSQL on port 5433
     environment:
       - POSTGRES_USER=postgresuserb
       - POSTGRES_PASSWORD=password
@@ -150,7 +150,7 @@ services:
     image: ghcr.io/data-space-core/connector/stage:latest
     container_name: consume-connector
     ports:
-      - 8081:8081
+      - 8082:8081
     environment:
       - CONFIGURATION_PATH=/config/config.json
       - SERVER_PORT=8081
@@ -159,7 +159,7 @@ services:
       - DAPS_KEY_URL=https://__HOST__/auth/jwks.json
       - DAPS_INCOMING_DAT_DEFAULT_WELLKNOWN=/jwks.json
       - SERVER_SSLv_KEY-STORE=file:///conf/default-connector-keystore.p12
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://consume-connector-database:5432/connectorbdb
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://consume-connector-database:5434/connectorbdb
       - SPRING_DATASOURCE_USERNAME=postgresuserb
       - SPRING_DATASOURCE_PASSWORD=password
       - SPRING_DATASOURCE_PLATFORM=postgres
