@@ -92,7 +92,7 @@ services:
     
   provide-connector-database:
     image: postgres:13
-    container_name: connector-database
+    container_name: provide-connector-database
     ports:
       - "5433:5432" # Exposes PostgreSQL on port 5433
     environment:
@@ -100,7 +100,7 @@ services:
       - POSTGRES_PASSWORD=password
       - POSTGRES_DB=connectorbdb
     volumes:
-      - connector-database:/var/lib/postgresql/data # Data persistence
+      - provide-connector-database:/var/lib/postgresql/data # Data persistence
     networks:
       - local
       
@@ -117,7 +117,7 @@ services:
       - DAPS_KEY_URL=https://__HOST__/auth/jwks.json
       - DAPS_INCOMING_DAT_DEFAULT_WELLKNOWN=/jwks.json
       - SERVER_SSLv_KEY-STORE=file:///conf/default-connector-keystore.p12
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://provide-connector-database:5432/connectorbdb
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://provide-:5432/connectorbdb
       - SPRING_DATASOURCE_USERNAME=postgresuserb
       - SPRING_DATASOURCE_PASSWORD=password
       - SPRING_DATASOURCE_PLATFORM=postgres
