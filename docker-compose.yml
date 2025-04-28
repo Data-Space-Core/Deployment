@@ -87,9 +87,8 @@ services:
       - CLIENT_ID=adminUI
     networks:
       - local
-
-  # Connector Database - PostgreSQL for Connector
-  connector-database:
+    
+  provide-connector-database:
     image: postgres:13
     container_name: connector-database
     ports:
@@ -102,11 +101,10 @@ services:
       - connector-database:/var/lib/postgresql/data # Data persistence
     networks:
       - local
-
-  # Connector - Manages data provisioning with integration to PostgreSQL
-  connector:
+      
+  provide-connector:
     image: ghcr.io/data-space-core/connector/stage:latest
-    container_name: connector
+    container_name: provide-connector
     ports:
       - 8081:8081
     environment:
@@ -117,7 +115,7 @@ services:
       - DAPS_KEY_URL=https://__HOST__/auth/jwks.json
       - DAPS_INCOMING_DAT_DEFAULT_WELLKNOWN=/jwks.json
       - SERVER_SSLv_KEY-STORE=file:///conf/default-connector-keystore.p12
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://connector-database:5432/connectorbdb
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://provide-connector-database:5432/connectorbdb
       - SPRING_DATASOURCE_USERNAME=postgresuserb
       - SPRING_DATASOURCE_PASSWORD=password
       - SPRING_DATASOURCE_PLATFORM=postgres
@@ -130,11 +128,54 @@ services:
     networks:
       - local
     depends_on:
-      - connector-database
+      - provide-connector-database
+
+  consume-connector-database:
+    image: postgres:13
+    container_name: consume-connector-database
+    ports:
+      - "5433:5432" # Exposes PostgreSQL on port 5433
+    environment:
+      - POSTGRES_USER=postgresuserb
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=connectorbdb
+    volumes:
+      - consume-connector-database:/var/lib/postgresql/data # Data persistence
+    networks:
+      - local
+      
+  consume-connector:
+    image: ghcr.io/data-space-core/connector/stage:latest
+    container_name: consume-connector
+    ports:
+      - 8081:8081
+    environment:
+      - CONFIGURATION_PATH=/config/config.json
+      - SERVER_PORT=8081
+      - DAPS_URL=https://__HOST__/auth
+      - DAPS_TOKEN_URL=https://__HOST__/auth/token
+      - DAPS_KEY_URL=https://__HOST__/auth/jwks.json
+      - DAPS_INCOMING_DAT_DEFAULT_WELLKNOWN=/jwks.json
+      - SERVER_SSLv_KEY-STORE=file:///conf/default-connector-keystore.p12
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://consume-connector-database:5432/connectorbdb
+      - SPRING_DATASOURCE_USERNAME=postgresuserb
+      - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_DATASOURCE_PLATFORM=postgres
+      - SPRING_DATASOURCE_DRIVERCLASSNAME=org.postgresql.Driver
+      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.PostgreSQLDialect
+    volumes:
+      - ./conf/config.json:/config/config.json
+      - ./conf/default-connector-keystore.p12:/conf/default-connector-keystore.p12
+      - ./conf/truststore.p12:/config/truststore.p12
+    networks:
+      - local
+    depends_on:
+      - consume-connector-database
 
 volumes:
   broker-fuseki: # Volume for Fuseki data
-  connector-database: # Volume for Connector data
+  provide-connector-database: # Volume for Connector data
+  consume-connector-database:
 
 networks:
   local:
