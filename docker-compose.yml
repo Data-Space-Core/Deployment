@@ -21,8 +21,10 @@ services:
       - broker-fuseki
       - omejdn-server
       - omejdn-ui
-      - connector
-      - connector-database
+      - provide-connector
+      - consume-connector
+      - provide-connector-database
+      - consume-connector-database
 
   # Broker Core Service - Manages data connectors and catalog
   broker-core:
