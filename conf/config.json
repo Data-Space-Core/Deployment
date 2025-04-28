@@ -13,7 +13,7 @@
   },
   "ids:connectorDescription" : {
     "@type" : "ids:BaseConnector",
-    "@id" : "https://__HOST__",
+    "@id" : "https://__HOST__/connector/",
     "ids:publicKey" : {
       "@type" : "ids:PublicKey",
       "@id" : "https://w3id.org/idsa/autogen/publicKey/78eb73a3-3a2a-4626-a0ff-631ab50a00f9",
