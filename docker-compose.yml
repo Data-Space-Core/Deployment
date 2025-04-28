@@ -1,21 +1,19 @@
-# docker-compose.yml
-version: '3.8'
-
 services:
+  # Nginx Reverse Proxy for handling HTTP and HTTPS traffic
   nginx:
     image: nginx:latest
     container_name: nginx
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
+      - "80:80"   # Exposes HTTP on port 80
+      - "443:443" # Exposes HTTPS on port 443
     environment:
       - OMEJDN_DOMAIN=__HOST__
       - OMEJDN_PATH=/auth
       - UI_PATH=/
     volumes:
-      - ./nginx.development.conf:/etc/nginx/nginx.conf:ro
-      - __CERTDIRECTORY__:/etc/cert:ro
+      - ./nginx.development.conf:/etc/nginx/nginx.conf # Nginx configuration
+      - __CERTDIRECTORY__:/etc/cert/ # SSL certificates
     networks:
       - local
     depends_on:
@@ -23,52 +21,51 @@ services:
       - broker-fuseki
       - omejdn-server
       - omejdn-ui
-      - provide-connector
-      - consume-connector
+      - connector
+      - connector-database
 
+  # Broker Core Service - Manages data connectors and catalog
   broker-core:
     image: ghcr.io/data-space-core/dsil-idsa-broker/core:latest
-    container_name: broker-core
+    container_name: broker
+    volumes:
+      - __CERTDIRECTORY__:/etc/cert/ # SSL certificates
     restart: always
-    expose:
-      - "8080"
     environment:
       - IDENTITY_JAVAKEYSTORE=/etc/cert/isstbroker-keystore.jks
-      - SPARQL_ENDPOINT=http://broker-fuseki:3030/connectorData
+      - SPARQL_ENDPOINT=http://broker-fuseki:3030/connectorData # Use container name for Fuseki
       - ELASTICSEARCH_HOSTNAME=broker-elasticsearch
       - SHACL_VALIDATION=true
       - DAPS_VALIDATE_INCOMING=true
-      - COMPONENT_URI=https://__HOST__/broker/
-      - COMPONENT_CATALOGURI=https://__HOST__/broker/connectors/
+      - COMPONENT_URI=https://__HOST__/broker/ # Updated for domain prefix
+      - COMPONENT_CATALOGURI=https://__HOST__/broker/connectors/ # Updated for domain prefix
       - JWKS_TRUSTEDHOSTS=__HOST__,daps
       - DAPS_URL=https://__HOST__/auth
       - DAPS_JWKS_URL=https://__HOST__/auth/jwks.json
-    volumes:
-      - __CERTDIRECTORY__:/etc/cert:ro
+    expose:
+      - "8080" # Internal communication on port 8080
     networks:
       - local
 
+  # Fuseki Service - Provides SPARQL endpoint for Broker Core
   broker-fuseki:
     image: ghcr.io/data-space-core/dsil-idsa-broker/fuseki:latest
-    container_name: broker-fuseki
-    restart: always
-    expose:
-      - "3030"
     volumes:
       - broker-fuseki:/fuseki
+    expose:
+      - "3030" # Internal SPARQL communication on port 3030
     networks:
       - local
 
+  # Omejdn Server - Handles OAuth2 and OpenID authentication
   omejdn-server:
     image: ghcr.io/data-space-core/dsil-omejdn-server/omejdn-server:latest
     container_name: daps
     hostname: daps
     restart: unless-stopped
-    expose:
-      - "4567"
     environment:
-      - OMEJDN_ISSUER=https://__HOST__/auth
-      - OMEJDN_FRONT_URL=https://__HOST__/auth
+      - OMEJDN_ISSUER=https://__HOST__/auth # Updated for domain prefix
+      - OMEJDN_FRONT_URL=https://__HOST__/auth # Updated for domain prefix
       - OMEJDN_OPENID=true
       - OMEJDN_ENVIRONMENT=${OMEJDN_ENVIRONMENT}
       - OMEJDN_ACCEPT_AUDIENCE=idsc:IDS_CONNECTORS_ALL
@@ -76,46 +73,40 @@ services:
       - OMEJDN_ADMIN=${ADMIN_USERNAME}:${ADMIN_PASSWORD}
     volumes:
       - ./config:/opt/config
-      - ./keys:/opt/keys
+      - ./keys:/opt/keys # Keys and configurations
     networks:
       - local
 
+  # Omejdn UI - Provides a user interface for managing Omejdn
   omejdn-ui:
     image: ghcr.io/fraunhofer-aisec/omejdn-ui:${UI_VERSION}
-    container_name: omejdn-ui
     restart: unless-stopped
-    expose:
-      - "80"
     environment:
-      - OIDC_ISSUER=https://__HOST__/auth/
-      - API_URL=https://__HOST__/auth/api/v1
+      - OIDC_ISSUER=https://__HOST__/auth/ # Updated for domain prefix
+      - API_URL=https://__HOST__/auth/api/v1 # Updated for domain prefix
       - CLIENT_ID=adminUI
     networks:
       - local
-
+    
   provide-connector-database:
     image: postgres:13
-    container_name: provide-connector-database
-    restart: unless-stopped
-    expose:
-      - "5432"
+    container_name: connector-database
+    ports:
+      - "5433:5432" # Exposes PostgreSQL on port 5433
     environment:
       - POSTGRES_USER=postgresuserb
       - POSTGRES_PASSWORD=password
       - POSTGRES_DB=connectorbdb
     volumes:
-      - provide-connector-database:/var/lib/postgresql/data
+      - connector-database:/var/lib/postgresql/data # Data persistence
     networks:
       - local
-
+      
   provide-connector:
     image: ghcr.io/data-space-core/connector/stage:latest
     container_name: provide-connector
-    restart: unless-stopped
-    expose:
-      - "8081"
-    depends_on:
-      - provide-connector-database
+    ports:
+      - 8081:8081
     environment:
       - CONFIGURATION_PATH=/config/config.json
       - SERVER_PORT=8081
@@ -136,30 +127,28 @@ services:
       - ./conf/truststore.p12:/config/truststore.p12
     networks:
       - local
+    depends_on:
+      - provide-connector-database
 
   consume-connector-database:
     image: postgres:13
     container_name: consume-connector-database
-    restart: unless-stopped
-    expose:
-      - "5432"
+    ports:
+      - "5433:5432" # Exposes PostgreSQL on port 5433
     environment:
       - POSTGRES_USER=postgresuserb
       - POSTGRES_PASSWORD=password
       - POSTGRES_DB=connectorbdb
     volumes:
-      - consume-connector-database:/var/lib/postgresql/data
+      - consume-connector-database:/var/lib/postgresql/data # Data persistence
     networks:
       - local
-
+      
   consume-connector:
     image: ghcr.io/data-space-core/connector/stage:latest
     container_name: consume-connector
-    restart: unless-stopped
-    expose:
-      - "8081"
-    depends_on:
-      - consume-connector-database
+    ports:
+      - 8081:8081
     environment:
       - CONFIGURATION_PATH=/config/config.json
       - SERVER_PORT=8081
@@ -180,12 +169,14 @@ services:
       - ./conf/truststore.p12:/config/truststore.p12
     networks:
       - local
+    depends_on:
+      - consume-connector-database
 
 volumes:
-  broker-fuseki:
-  provide-connector-database:
+  broker-fuseki: # Volume for Fuseki data
+  provide-connector-database: # Volume for Connector data
   consume-connector-database:
 
 networks:
   local:
-    driver: bridge
+    driver: bridge # Bridge network for inter-service communication
