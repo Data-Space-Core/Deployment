@@ -1,0 +1,81 @@
+{
+	"info": {
+		"_postman_id": "97bf978c-7638-49a0-8235-df6dbfe65f1b",
+		"name": "Connector Registration",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "29825884",
+		"_collection_link": "https://h55555-7538.postman.co/workspace/test~abf75abb-ee99-4eec-931d-ddf936337909/collection/29825884-97bf978c-7638-49a0-8235-df6dbfe65f1b?action=share&source=collection_link&creator=29825884"
+	},
+	"item": [
+		{
+			"name": "Register Connetor",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"default-connector\",\n    \"security_profile\": \"idsc:BASE_SECURITY_PROFILE\",\n    \"cert_file\": \"/Users/rfryan/Development/Deployment/connector_registration/server.crt\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5000/register-connector",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"register-connector"
+					]
+				},
+				"description": "Generated from cURL: curl -X POST http://127.0.0.1:5000/register-connector \\\n-H \"Content-Type: application/json\" \\\n-d '{\n    \"name\": \"default-connector\",\n    \"security_profile\": \"idsc:BASE_SECURITY_PROFILE\",\n    \"cert_file\": \"/path/to/certificate.crt\"\n}'"
+			},
+			"response": []
+		},
+		{
+			"name": "Register Connector Server",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"default-connector\",\n    \"security_profile\": \"idsc:BASE_SECURITY_PROFILE\",\n    \"cert_file\": \"/Users/rfryan/Development/Deployment/connector_registration/server.crt\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://digi4live.collab-cloud.eu/connector-registration/register-connector",
+					"protocol": "https",
+					"host": [
+						"digi4live",
+						"collab-cloud",
+						"eu"
+					],
+					"path": [
+						"connector-registration",
+						"register-connector"
+					]
+				},
+				"description": "Generated from cURL: curl --location 'https://digi4live.collab-cloud.eu/connector-registration/register-connector' \\\n--header 'Content-Type: application/json' \\\n--data '{\n    \"name\": \"default-connector\",\n    \"security_profile\": \"idsc:BASE_SECURITY_PROFILE\",\n    \"cert_file\": \"/Users/rfryan/Development/Deployment/connector_registration/server.crt\"\n}'"
+			},
+			"response": []
+		}
+	]
+}

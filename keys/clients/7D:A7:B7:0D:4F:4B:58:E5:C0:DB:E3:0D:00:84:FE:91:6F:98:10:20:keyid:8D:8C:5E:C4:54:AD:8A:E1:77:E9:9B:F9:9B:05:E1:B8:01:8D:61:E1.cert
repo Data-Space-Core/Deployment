@@ -4,11 +4,11 @@ Certificate:
         Serial Number:
             80:cc:fa:dd:a7:ce:6d:9e:97:c7:33:76:3b:6e:50:fa
         Signature Algorithm: sha256WithRSAEncryption
-        Issuer: C=GB, ST=Greater Manchester, L=Salford, O=Sectigo Limited, CN=Sectigo RSA Domain Validation Secure Server CA
+        Issuer: C = GB, ST = Greater Manchester, L = Salford, O = Sectigo Limited, CN = Sectigo RSA Domain Validation Secure Server CA
         Validity
             Not Before: Apr  1 00:00:00 2025 GMT
             Not After : May  2 23:59:59 2026 GMT
-        Subject: CN=*.collab-cloud.eu
+        Subject: CN = *.collab-cloud.eu
         Subject Public Key Info:
             Public Key Algorithm: rsaEncryption
                 Public-Key: (4096 bit)
