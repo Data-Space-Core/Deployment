@@ -132,7 +132,7 @@ services:
     depends_on:
       - connector-database
 
-connector-registration:
+  connector-registration:
     build:
       context: ./connector_registration
       dockerfile: Dockerfile
