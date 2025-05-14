@@ -132,7 +132,7 @@ services:
     depends_on:
       - connector-database
 
-  connector-registration:
+connector-registration:
     build:
       context: ./connector_registration
       dockerfile: Dockerfile
@@ -142,6 +142,9 @@ services:
       - "5001:5001"  # Expose Flask app on port 5001
     volumes:
       - ./connector_registration:/app  # Mount the app directory for development
+      - ./scripts:/scripts  # Map the scripts directory
+      - ./keys:/keys  # Map the keys directory
+      - ./config:/config  # Map the configuration directory
     networks:
       - local
     depends_on:
