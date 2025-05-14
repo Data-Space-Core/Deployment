@@ -132,6 +132,21 @@ services:
     depends_on:
       - connector-database
 
+  connector-registration:
+    build:
+      context: ./connector_registration
+      dockerfile: Dockerfile
+    container_name: connector-registration
+    restart: unless-stopped
+    ports:
+      - "5001:5001"  # Expose Flask app on port 5001
+    volumes:
+      - ./connector_registration:/app  # Mount the app directory for development
+    networks:
+      - local
+    depends_on:
+      - connector
+
 volumes:
   broker-fuseki: # Volume for Fuseki data
   connector-database: # Volume for Connector data
