@@ -1,0 +1,73 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 2 (0x2)
+        Signature Algorithm: ecdsa-with-SHA256
+        Issuer: C = ES, O = SQS, OU = TestLab, CN = ReferenceTestbedSubCA
+        Validity
+            Not Before: Nov 17 09:59:57 2022 GMT
+            Not After : Nov 16 09:59:57 2025 GMT
+        Subject: C = ES, O = SQS, OU = TestLab, CN = testbed2
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+                Public-Key: (2048 bit)
+                Modulus:
+                    00:e1:12:c7:f4:83:97:be:41:48:1c:52:57:11:b7:
+                    1a:40:df:64:80:ef:86:d4:dc:76:2f:a7:d2:d2:63:
+                    3c:fd:09:e4:fa:a9:f9:5c:89:a2:c0:46:42:be:34:
+                    ec:5c:56:1f:a7:a9:77:2d:18:42:65:de:99:c3:8f:
+                    8b:7e:d2:e9:c2:8b:3b:b5:1e:61:30:d5:c3:a8:c8:
+                    4b:d7:90:19:ab:7e:5f:e4:76:40:ac:4e:a8:b1:ec:
+                    23:8b:8e:04:b5:86:9e:e3:2f:85:30:cd:c6:7b:83:
+                    5c:e0:83:f7:f9:71:63:91:2c:10:63:97:53:21:41:
+                    9f:48:27:80:aa:15:b8:50:d5:bc:6d:57:cc:f4:b4:
+                    43:63:ff:2f:31:80:a9:63:0b:e8:de:5a:13:f1:77:
+                    34:cb:89:a8:5c:fc:68:78:aa:df:1c:a9:21:ec:81:
+                    86:65:02:d0:92:92:2d:a7:96:88:c4:8d:2a:88:99:
+                    b0:f3:40:34:ce:4b:8f:5e:cd:ef:a5:af:3b:56:a4:
+                    4f:9a:51:00:72:c0:f4:8e:52:14:18:c5:ce:09:08:
+                    55:2c:b5:b7:ec:20:b9:36:f0:85:e5:f4:45:62:a7:
+                    85:44:a0:b2:dc:12:38:6e:61:86:24:75:2c:dc:92:
+                    18:47:1b:7e:6e:62:f8:f9:06:af:32:0a:6f:06:77:
+                    8b:15
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Basic Constraints: critical
+                CA:FALSE
+            X509v3 Extended Key Usage: critical
+                TLS Web Server Authentication, TLS Web Client Authentication
+            X509v3 Key Usage: critical
+                Digital Signature, Key Encipherment, Key Agreement
+            X509v3 Subject Key Identifier: critical
+                F0:29:3D:CE:68:FA:07:14:FA:DF:47:C1:3C:E2:37:63:FC:95:A1:0D
+            X509v3 Authority Key Identifier: critical
+                41:30:3C:7E:87:C2:EF:66:72:27:91:82:EF:56:E9:0C:5C:2B:BC:2B
+            X509v3 Subject Alternative Name: 
+                IP Address:127.0.0.1, DNS:connectorb, DNS:localhost
+    Signature Algorithm: ecdsa-with-SHA256
+    Signature Value:
+        30:64:02:30:3c:95:68:8b:5c:01:c0:a1:82:f6:a2:cd:d3:d9:
+        24:e1:2d:ef:80:ab:d0:62:41:39:9d:b5:73:85:95:93:a2:1b:
+        06:e0:00:1f:38:ba:0f:c9:58:2c:0a:77:a1:28:a6:83:02:30:
+        62:4a:9b:63:1f:e9:00:90:79:18:e1:f7:87:bc:31:02:23:71:
+        f2:db:62:b7:83:16:2f:3e:9a:c2:55:06:1b:f0:2c:50:ac:18:
+        65:cf:15:a7:79:9d:1f:ca:19:06:3a:04
+-----BEGIN CERTIFICATE-----
+MIIDGDCCAp+gAwIBAgIBAjAKBggqhkjOPQQDAjBNMQswCQYDVQQGEwJFUzEMMAoG
+A1UECgwDU1FTMRAwDgYDVQQLDAdUZXN0TGFiMR4wHAYDVQQDDBVSZWZlcmVuY2VU
+ZXN0YmVkU3ViQ0EwHhcNMjIxMTE3MDk1OTU3WhcNMjUxMTE2MDk1OTU3WjBAMQsw
+CQYDVQQGEwJFUzEMMAoGA1UECgwDU1FTMRAwDgYDVQQLDAdUZXN0TGFiMREwDwYD
+VQQDDAh0ZXN0YmVkMjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAOES
+x/SDl75BSBxSVxG3GkDfZIDvhtTcdi+n0tJjPP0J5Pqp+VyJosBGQr407FxWH6ep
+dy0YQmXemcOPi37S6cKLO7UeYTDVw6jIS9eQGat+X+R2QKxOqLHsI4uOBLWGnuMv
+hTDNxnuDXOCD9/lxY5EsEGOXUyFBn0gngKoVuFDVvG1XzPS0Q2P/LzGAqWML6N5a
+E/F3NMuJqFz8aHiq3xypIeyBhmUC0JKSLaeWiMSNKoiZsPNANM5Lj17N76WvO1ak
+T5pRAHLA9I5SFBjFzgkIVSy1t+wguTbwheX0RWKnhUSgstwSOG5hhiR1LNySGEcb
+fm5i+PkGrzIKbwZ3ixUCAwEAAaOBsTCBrjAMBgNVHRMBAf8EAjAAMCAGA1UdJQEB
+/wQWMBQGCCsGAQUFBwMBBggrBgEFBQcDAjAOBgNVHQ8BAf8EBAMCA6gwIAYDVR0O
+AQH/BBYEFPApPc5o+gcU+t9HwTziN2P8laENMCIGA1UdIwEB/wQYMBaAFEEwPH6H
+wu9mcieRgu9W6QxcK7wrMCYGA1UdEQQfMB2HBH8AAAGCCmNvbm5lY3RvcmKCCWxv
+Y2FsaG9zdDAKBggqhkjOPQQDAgNnADBkAjA8lWiLXAHAoYL2os3T2SThLe+Aq9Bi
+QTmdtXOFlZOiGwbgAB84ug/JWCwKd6EopoMCMGJKm2Mf6QCQeRjh94e8MQIjcfLb
+YreDFi8+msJVBhvwLFCsGGXPFad5nR/KGQY6BA==
+-----END CERTIFICATE-----

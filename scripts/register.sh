@@ -1,6 +1,21 @@
 #!/bin/sh
 
-mkdir -p keys/clients
+# Set dynamic paths using the tilde (~) for the home directory
+BASE_DIR=~/Deployment
+KEYS_DIR="$BASE_DIR/keys"
+CLIENTS_DIR="$KEYS_DIR/clients"
+CONFIG_DIR="$BASE_DIR/config"
+
+# Debugging: Log the paths being used
+echo "BASE_DIR: $BASE_DIR"
+echo "KEYS_DIR: $KEYS_DIR"
+echo "CLIENTS_DIR: $CLIENTS_DIR"
+echo "CONFIG_DIR: $CONFIG_DIR"
+
+# Ensure the directories exist
+mkdir -p "$KEYS_DIR"
+mkdir -p "$CLIENTS_DIR"
+mkdir -p "$CONFIG_DIR"
 
 if [ ! $# -ge 1 ] || [ ! $# -le 3 ]; then
     echo "Usage: $0 NAME (SECURITY_PROFILE) (CERTFILE)"
@@ -8,27 +23,32 @@ if [ ! $# -ge 1 ] || [ ! $# -le 3 ]; then
 fi
 
 CLIENT_NAME=$1
-
 CLIENT_SECURITY_PROFILE=$2
 [ -z "$CLIENT_SECURITY_PROFILE" ] && CLIENT_SECURITY_PROFILE="idsc:BASE_SECURITY_PROFILE"
 
-CLIENT_CERT="keys/$CLIENT_NAME.cert"
+CLIENT_CERT="$KEYS_DIR/$CLIENT_NAME.cert"
+echo "CLIENT_CERT: $CLIENT_CERT"
+
 if [ -n "$3" ]; then
     [ ! -f "$3" ] && (echo "Cert not found"; exit 1)
     cert_format="DER"
     openssl x509 -noout -in "$3" 2>/dev/null && cert_format="PEM"
     openssl x509 -inform "$cert_format" -in "$3" -text > "$CLIENT_CERT"
 else
-    openssl req -newkey rsa:2048 -new -batch -nodes -x509 -days 3650 -text -keyout "keys/${CLIENT_NAME}.key" -out "$CLIENT_CERT"
+    openssl req -newkey rsa:2048 -new -batch -nodes -x509 -days 3650 -text -keyout "$CLIENTS_DIR/${CLIENT_NAME}.key" -out "$CLIENT_CERT"
 fi
+
+echo "Generated CLIENT_CERT: $CLIENT_CERT"
 
 SKI="$(grep -A1 "Subject Key Identifier"  "$CLIENT_CERT" | tail -n 1 | tr -d ' ')"
 AKI="$(grep -A1 "Authority Key Identifier"  "$CLIENT_CERT" | tail -n 1 | tr -d ' ')"
 CLIENT_ID="$SKI:keyid:$AKI"
 
+echo "CLIENT_ID: $CLIENT_ID"
+
 CLIENT_CERT_SHA="$(openssl x509 -in "$CLIENT_CERT" -noout -sha256 -fingerprint | tr '[:upper:]' '[:lower:]' | tr -d : | sed 's/.*=//')"
 
-cat >> config/clients.yml <<EOF
+cat >> "$CONFIG_DIR/clients.yml" <<EOF
 - client_id: $CLIENT_ID
   client_name: $CLIENT_NAME
   grant_types: client_credentials
@@ -49,4 +69,7 @@ cat >> config/clients.yml <<EOF
     value: $CLIENT_CERT_SHA
 EOF
 
-cp "$CLIENT_CERT" keys/clients/${CLIENT_ID}.cert
+echo "Updated clients.yml"
+
+cp "$CLIENT_CERT" "$CLIENTS_DIR/${CLIENT_ID}.cert"
+echo "Copied CLIENT_CERT to $CLIENTS_DIR/${CLIENT_ID}.cert"

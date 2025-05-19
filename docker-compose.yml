@@ -8,12 +8,12 @@ services:
       - "80:80"   # Exposes HTTP on port 80
       - "443:443" # Exposes HTTPS on port 443
     environment:
-      - OMEJDN_DOMAIN=__HOST__
+      - OMEJDN_DOMAIN=digi4live.collab-cloud.eu
       - OMEJDN_PATH=/auth
       - UI_PATH=/
     volumes:
       - ./nginx.development.conf:/etc/nginx/nginx.conf # Nginx configuration
-      - __CERTDIRECTORY__:/etc/cert/ # SSL certificates
+      - /etc/cert:/etc/cert/ # SSL certificates
     networks:
       - local
     depends_on:
@@ -29,7 +29,7 @@ services:
     image: ghcr.io/data-space-core/dsil-idsa-broker/core:latest
     container_name: broker
     volumes:
-      - __CERTDIRECTORY__:/etc/cert/ # SSL certificates
+      - /etc/cert:/etc/cert/ # SSL certificates
     restart: always
     environment:
       - IDENTITY_JAVAKEYSTORE=/etc/cert/isstbroker-keystore.jks
@@ -37,11 +37,11 @@ services:
       - ELASTICSEARCH_HOSTNAME=broker-elasticsearch
       - SHACL_VALIDATION=true
       - DAPS_VALIDATE_INCOMING=true
-      - COMPONENT_URI=https://__HOST__/broker/ # Updated for domain prefix
-      - COMPONENT_CATALOGURI=https://__HOST__/broker/connectors/ # Updated for domain prefix
-      - JWKS_TRUSTEDHOSTS=__HOST__,daps
-      - DAPS_URL=https://__HOST__/auth
-      - DAPS_JWKS_URL=https://__HOST__/auth/jwks.json
+      - COMPONENT_URI=https://digi4live.collab-cloud.eu/broker/ # Updated for domain prefix
+      - COMPONENT_CATALOGURI=https://digi4live.collab-cloud.eu/broker/connectors/ # Updated for domain prefix
+      - JWKS_TRUSTEDHOSTS=digi4live.collab-cloud.eu,daps
+      - DAPS_URL=https://digi4live.collab-cloud.eu/auth
+      - DAPS_JWKS_URL=https://digi4live.collab-cloud.eu/auth/jwks.json
     expose:
       - "8080" # Internal communication on port 8080
     networks:
@@ -64,8 +64,8 @@ services:
     hostname: daps
     restart: unless-stopped
     environment:
-      - OMEJDN_ISSUER=https://__HOST__/auth # Updated for domain prefix
-      - OMEJDN_FRONT_URL=https://__HOST__/auth # Updated for domain prefix
+      - OMEJDN_ISSUER=https://digi4live.collab-cloud.eu/auth # Updated for domain prefix
+      - OMEJDN_FRONT_URL=https://digi4live.collab-cloud.eu/auth # Updated for domain prefix
       - OMEJDN_OPENID=true
       - OMEJDN_ENVIRONMENT=${OMEJDN_ENVIRONMENT}
       - OMEJDN_ACCEPT_AUDIENCE=idsc:IDS_CONNECTORS_ALL
@@ -82,8 +82,8 @@ services:
     image: ghcr.io/fraunhofer-aisec/omejdn-ui:${UI_VERSION}
     restart: unless-stopped
     environment:
-      - OIDC_ISSUER=https://__HOST__/auth/ # Updated for domain prefix
-      - API_URL=https://__HOST__/auth/api/v1 # Updated for domain prefix
+      - OIDC_ISSUER=https://digi4live.collab-cloud.eu/auth/ # Updated for domain prefix
+      - API_URL=https://digi4live.collab-cloud.eu/auth/api/v1 # Updated for domain prefix
       - CLIENT_ID=adminUI
     networks:
       - local
@@ -112,9 +112,9 @@ services:
     environment:
       - CONFIGURATION_PATH=/config/config.json
       - SERVER_PORT=8081
-      - DAPS_URL=https://__HOST__/auth
-      - DAPS_TOKEN_URL=https://__HOST__/auth/token
-      - DAPS_KEY_URL=https://__HOST__/auth/jwks.json
+      - DAPS_URL=https://digi4live.collab-cloud.eu/auth
+      - DAPS_TOKEN_URL=https://digi4live.collab-cloud.eu/auth/token
+      - DAPS_KEY_URL=https://digi4live.collab-cloud.eu/auth/jwks.json
       - DAPS_INCOMING_DAT_DEFAULT_WELLKNOWN=/jwks.json
       - SERVER_SSLv_KEY-STORE=file:///conf/default-connector-keystore.p12
       - SPRING_DATASOURCE_URL=jdbc:postgresql://connector-database:5432/connectorbdb
@@ -131,6 +131,24 @@ services:
       - local
     depends_on:
       - connector-database
+
+  connector-registration:
+    build:
+      context: ./connector_registration
+      dockerfile: Dockerfile
+    container_name: connector-registration
+    restart: unless-stopped
+    ports:
+      - "5001:5001"  # Expose Flask app on port 5001
+    volumes:
+      - ./connector_registration:/app  # Mount the app directory for development
+      - ./scripts:/scripts  # Map the scripts directory
+      - ./keys:/keys  # Map the keys directory
+      - ./config:/config  # Map the configuration directory
+    networks:
+      - local
+    depends_on:
+      - connector
 
 volumes:
   broker-fuseki: # Volume for Fuseki data

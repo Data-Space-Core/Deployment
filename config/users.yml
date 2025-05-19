@@ -1,0 +1,6 @@
+---
+- username: admin
+  attributes:
+  - key: omejdn
+    value: admin
+  password: "$2a$12$gfcde0JBO/lLZIOoYO/1keb2540AtXljbN45JW23IMTodJb3vthA6"
