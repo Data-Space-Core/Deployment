@@ -71,6 +71,7 @@ services:
       - OMEJDN_ACCEPT_AUDIENCE=idsc:IDS_CONNECTORS_ALL
       - OMEJDN_DEFAULT_AUDIENCE=idsc:IDS_CONNECTORS_ALL
       - OMEJDN_ADMIN=${ADMIN_USERNAME}:${ADMIN_PASSWORD}
+      - DAPS_VALIDATE_INCOMING=false
     volumes:
       - ./config:/opt/config
       - ./keys:/opt/keys # Keys and configurations
