@@ -168,7 +168,7 @@ services:
     networks:
       - local
 
-  provide-user-interface:
+  provider-ui:
     container_name: provide-user-interface
     image: ghcr.io/data-space-core/provide-user-interface/stage:latest
     command: python manage.py runserver 0.0.0.0:8000
@@ -176,17 +176,6 @@ services:
       - .env:/app/.env
     ports:
       - "8091:8000"
-    networks:
-      - local
-
-  consume-user-interface:
-    container_name: consume-user-interface
-    image: ghcr.io/data-space-core/consume-user-interface-2/stage:latest
-    command: python manage.py runserver 0.0.0.0:8000
-    volumes:
-      - .env:/app/.env
-    ports:
-      - "8092:8000"
     networks:
       - local
   
