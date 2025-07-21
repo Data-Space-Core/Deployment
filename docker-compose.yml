@@ -180,6 +180,17 @@ services:
     networks:
       - local
   
+  consumer-ui:
+    container_name: consumer-ui
+    image: ghcr.io/data-space-core/consume-user-interface-2/stage:latest
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .env:/app/.env
+    ports:
+      - "8092:8000"
+    networks:
+      - local
+  
 volumes:
   broker-fuseki: # Volume for Fuseki data
   connector-database: # Volume for Connector data
