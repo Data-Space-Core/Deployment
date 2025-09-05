@@ -1,237 +1,108 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-# Login to GHCR
-sudo docker login ghcr.io 
-# Function to check and create a directory
-check_and_create_dir() {
-  if [ ! -d "$1" ]; then
-    echo "Directory $1 is missing. Creating it now."
-    mkdir -p "$1"
-  else
-    echo "Directory $1 already exists."
-  fi
-}
+# Idempotent runner: prepares generated configs and starts stack without mutating tracked files.
 
-check_file_exists() {
-    if ! sudo test -f "$1"; then
-        echo "Error: Required file $1 is missing or inaccessible!"
-        return 1
-    else
-        echo "File $1 exists."
-        return 0
-    fi
-}
+umask 077
 
-# Check required directories
-check_and_create_dir "./cert"
-check_and_create_dir "./conf"
-check_and_create_dir "./keys"
+ROOT_DIR=$(cd "$(dirname "$0")" && pwd)
+GEN_DIR="$ROOT_DIR/.generated"
+CERT_DIR="$ROOT_DIR/cert"
+CONF_DIR="$ROOT_DIR/conf"
+TEMPLATE_NGX="$ROOT_DIR/nginx.template.conf"
+OUT_NGX="$GEN_DIR/nginx.conf"
+OUT_CONNECTOR_CONF="$GEN_DIR/config.json"
+GEN_CONFIG_DIR="$GEN_DIR/config"
 
-# Ensure no directory exists at the location of the keystore file
-OUT_FILE="./conf/default-connector-keystore.p12"
-if [ -d "$OUT_FILE" ]; then
-  echo "Removing mistakenly created directory at $OUT_FILE"
-  rm -rf "$OUT_FILE"
+mkdir -p "$GEN_DIR" "$GEN_CONFIG_DIR" "$CERT_DIR" "$ROOT_DIR/keys" "$ROOT_DIR/upload"
+cp -R "$ROOT_DIR/config/"* "$GEN_CONFIG_DIR"/ 2>/dev/null || true
+
+if [ -f "$ROOT_DIR/.env" ]; then
+  # shellcheck disable=SC2046
+  export $(grep -v "^#" "$ROOT_DIR/.env" | grep -E "^[A-Za-z0-9_]+=" | xargs -0 -I {} echo {})
 fi
 
-# Prepare files
-NGINX_CONF="./nginx.development.conf"
-COMPOSE_FILE="./docker-compose.yml"
-CONNECTORCONF="./conf/config.json"
-
-# Ask for the Fully Qualified Domain Name (FQDN)
-echo "Please provide the Fully Qualified Domain Name (FQDN):"
-read -r FQDN
-# If FQDN is empty, try to auto-detect it
-if [[ -z "$FQDN" ]]; then
-  SERVER_IP=$(ip addr show scope global | grep 'inet ' | awk '{print $2}' | cut -d'/' -f1 | head -n1)
-  if [[ -z "$SERVER_IP" ]]; then
-    echo "❌ Could not determine the server's IP address."
-    exit 1
-  fi
-
-  # Use dig to resolve FQDN from IP
-  FQDN=$(dig +short -x "$SERVER_IP" | sed 's/\.$//')
-
-  if [[ -z "$FQDN" ]]; then
-    echo "❌ Could not resolve FQDN from IP address ($SERVER_IP)."
-    exit 1
-  fi
-
-  echo "✅ Auto-detected FQDN: $FQDN"
-else
-  echo "✅ Using provided FQDN: $FQDN"
+FQDN=${DOMAIN:-}
+if [ -z "${FQDN:-}" ]; then
+  read -rp "FQDN (e.g. example.com): " FQDN
+fi
+if [ -z "${FQDN:-}" ]; then
+  echo "FQDN is required." >&2; exit 1
 fi
 
-# Ask for the path to the SSL certificate directory
-echo "Please provide the path to the SSL certificates:"
-read -r CERT_PATH
-# Check if directory exists
-if [[ ! -d "$CERT_PATH" ]]; then
-  echo "❌ Directory does not exist: $CERT_PATH"
-  exit 1
-fi
+ALLOWED_ORIGIN=${ALLOWED_ORIGIN:-"https://$FQDN"}
 
-# Ask for the path to the SSL cert file
-echo "Please provide the name of public certificate file:"
-read -r CERT_FILE
-# Check if file exists
-if [[ ! -f "$CERT_PATH/$CERT_FILE" ]]; then
-  echo "❌ Public certificate file not found: $CERT_PATH/$CERT_FILE"
-  exit 1
-fi
-# Ask for the path to the SSL private key
-echo "Please provide the name of private key file:"
-read -r KEY_FILE
-# Check if file exists
-if [[ ! -f "$CERT_PATH/$KEY_FILE" ]]; then
-  echo "❌ Private key file not found: $CERT_PATH/$KEY_FILE"
-  exit 1
-fi
+read -rp "Path to public certificate file: " PUBLIC_CERT_FILE
+read -rp "Path to private key file: " PRIVATE_KEY_FILE
+read -rp "Path to chained certificate file (fullchain): " CHAIN_CERT_FILE
 
-# Ask for the path to chained SSL public key
-echo "Please provide the name of chained public certificate file:"
-read -r CHAIN_FILE
-
-# Check if file exists
-if [[ ! -f "$CERT_PATH/$CHAIN_FILE" ]]; then
-  echo "❌ Chained certificate file not found: $CERT_PATH/$CHAIN_FILE"
-  exit 1
-fi
-
-# Check if the nginx configuration file exists
-if [[ ! -f "$NGINX_CONF" ]]; then
-    echo "Error: nginx.development.conf file not found in the current directory."
-    exit 1
-fi
-
-# Check if the docker-compose configuration file exists
-if [[ ! -f "$COMPOSE_FILE" ]]; then
-    echo "Error: docker-compose.yml file not found in the current directory."
-    exit 1
-fi
-
-sed -i "s|__HOST__|$FQDN|g" "$NGINX_CONF"
-sed -i "s|__CERT__|$CHAIN_FILE|g" "$NGINX_CONF"
-sed -i "s|__KEY__|$KEY_FILE|g" "$NGINX_CONF"
-sed -i "s|__HOST__|$FQDN|g" "$COMPOSE_FILE"
-sed -i "s|__HOST__|$FQDN|g" "$CONNECTORCONF"
-sed -i "s|__CERTDIRECTORY__|$CERT_PATH|g" "$COMPOSE_FILE"
-sed -i "s|__HOST__|$FQDN|g" "./config/omejdn.yml"
-# Check required files
-MISSING_FILES=0
-CERT_DIR="./cert"
-REQUIRED_FILES=(
-  "$CERT_PATH/$KEY_FILE"
-  "$CERT_PATH/$CERT_FILE"
-  "./conf/config.json"
-  "./conf/truststore.p12"
-)
-
-for FILE in "${REQUIRED_FILES[@]}"; do
-  check_file_exists "$FILE" || MISSING_FILES=$((MISSING_FILES + 1))
+for f in "$PUBLIC_CERT_FILE" "$PRIVATE_KEY_FILE" "$CHAIN_CERT_FILE"; do
+  [ -f "$f" ] || { echo "Missing file: $f" >&2; exit 1; }
 done
 
+# Copy certs into ./cert with safe permissions
+cp "$PUBLIC_CERT_FILE" "$CERT_DIR/server.crt"
+cp "$CHAIN_CERT_FILE" "$CERT_DIR/fullchain.crt"
+cp "$PRIVATE_KEY_FILE" "$CERT_DIR/server.key"
+chmod 600 "$CERT_DIR/server.key"
+chmod 644 "$CERT_DIR"/*.crt || true
 
-if [ $MISSING_FILES -ne 0 ]; then
-  echo "Error: One or more required files are missing. Please check and try again."
-  exit 1
+# Render nginx config from template
+if [ ! -f "$TEMPLATE_NGX" ]; then
+  echo "Missing nginx.template.conf" >&2; exit 1
+fi
+export FQDN CERT_FILE="fullchain.crt" KEY_FILE="server.key" ALLOWED_ORIGIN
+awk '{
+  line=$0;
+  gsub(/\$\{FQDN\}/, ENVIRON["FQDN"], line);
+  gsub(/\$\{CERT_FILE\}/, ENVIRON["CERT_FILE"], line);
+  gsub(/\$\{KEY_FILE\}/, ENVIRON["KEY_FILE"], line);
+  gsub(/\$\{ALLOWED_ORIGIN\}/, ENVIRON["ALLOWED_ORIGIN"], line);
+  print line;
+}' "$TEMPLATE_NGX" > "$OUT_NGX"
+
+# Render connector config from template
+CONNECTOR_TEMPLATE="$CONF_DIR/config.template.json"
+if [ ! -f "$CONNECTOR_TEMPLATE" ]; then
+  echo "Missing conf/config.template.json" >&2; exit 1
+fi
+awk '{
+  line=$0;
+  gsub(/\$\{FQDN\}/, ENVIRON["FQDN"], line);
+  print line;
+}' "$CONNECTOR_TEMPLATE" > "$OUT_CONNECTOR_CONF"
+
+# Ensure truststore is in place (copied from repo conf or provided by user)
+if [ -f "$CONF_DIR/truststore.p12" ]; then
+  cp "$CONF_DIR/truststore.p12" "$GEN_CONFIG_DIR/truststore.p12"
 fi
 
-# Register connector to DAPS
-REGISTER_SCRIPT="scripts/register.sh"
-CONNECTOR_NAME="default-connector"
-SECURITY_PROFILE="idsc:BASE_SECURITY_PROFILE"
-
-if [ -x "$REGISTER_SCRIPT" ]; then
-  echo "Registering connector to DAPS... with certificate at $CERT_PATH/$CERT_FILE"
-  $REGISTER_SCRIPT "$CONNECTOR_NAME" "$SECURITY_PROFILE" "$CERT_PATH/$CERT_FILE"
-
-  if [ $? -eq 0 ]; then
-    echo "Connector successfully registered to DAPS!"
-  else
-    echo "Error: Failed to register connector to DAPS."
-    exit 1
-  fi
-else
-  echo "Error: Registration script $REGISTER_SCRIPT not found or not executable."
-  exit 1
+# Register default connector and broker in generated config dir
+REGISTER_SCRIPT="$ROOT_DIR/scripts/register.sh"
+if [ ! -x "$REGISTER_SCRIPT" ]; then
+  echo "Registration script not executable; fixing perms"; chmod +x "$REGISTER_SCRIPT"
 fi
 
-# Generate PKCS#12 file
+echo "Registering default connector and broker to DAPS using provided public cert..."
+"$REGISTER_SCRIPT" default-connector idsc:BASE_SECURITY_PROFILE "$CERT_DIR/server.crt" --config-dir "$GEN_CONFIG_DIR" --keys-dir "$ROOT_DIR/keys"
+"$REGISTER_SCRIPT" default-broker idsc:BASE_SECURITY_PROFILE "$CERT_DIR/server.crt" --config-dir "$GEN_CONFIG_DIR" --keys-dir "$ROOT_DIR/keys"
+
+# Generate PKCS#12 files
 echo "Generating Connector PKCS#12 file..."
-openssl pkcs12 -export -out "$OUT_FILE" \
-    -inkey "$CERT_PATH/$KEY_FILE" \
-    -in "$CERT_PATH/$CERT_FILE" \
-    -passout pass:password
+openssl pkcs12 -export -out "$ROOT_DIR/conf/default-connector-keystore.p12" -inkey "$CERT_DIR/server.key" -in "$CERT_DIR/server.crt" -passout pass:password
+chmod 600 "$ROOT_DIR/conf/default-connector-keystore.p12"
 
-if [ $? -eq 0 ]; then
-  echo "PKCS#12 file successfully generated at $OUT_FILE"
-else
-  echo "Error: Failed to generate PKCS#12 file."
-  exit 1
-fi
-
-# Register Broker with DAPS
-CONNECTOR_NAME="default-broker"
-SECURITY_PROFILE="idsc:BASE_SECURITY_PROFILE"
-
-if [ -x "$REGISTER_SCRIPT" ]; then
-  echo "Registering broker to DAPS... with certificate at $CERT_PATH/$CERT_FILE"
-  $REGISTER_SCRIPT "$CONNECTOR_NAME" "$SECURITY_PROFILE" "$CERT_PATH/$CERT_FILE"
-
-  if [ $? -eq 0 ]; then
-    echo "Connector successfully registered to DAPS!"
-  else
-    echo "Error: Failed to register connector to DAPS."
-    exit 1
-  fi
-else
-  echo "Error: Registration script $REGISTER_SCRIPT not found or not executable."
-  exit 1
-fi
-
-# Generate PKCS#12 file
 echo "Generating Broker PKCS#12 file..."
-openssl pkcs12 -export -out ./cert/isstbroker-keystore.p12 \
-    -inkey "$CERT_PATH/$KEY_FILE" \
-    -in "./keys/$CONNECTOR_NAME.cert" \
-    -passout pass:password
-if [ $? -eq 0 ]; then
-  echo "PKCS#12 file successfully generated at $OUT_FILE"
-else
-  echo "Error: Failed to generate PKCS#12 file."
-  exit 1
+openssl pkcs12 -export -out "$CERT_DIR/isstbroker-keystore.p12" -inkey "$CERT_DIR/server.key" -in "$ROOT_DIR/keys/default-broker.cert" -passout pass:password || true
+
+echo "Converting Broker keystore to JKS..."
+if command -v keytool >/dev/null 2>&1; then
+  keytool -importkeystore -srckeystore "$CERT_DIR/isstbroker-keystore.p12" -srcstoretype PKCS12 -destkeystore "$CERT_DIR/isstbroker-keystore.jks" -deststoretype JKS -srcstorepass password -deststorepass password || true
 fi
-sudo chmod -R 644 ./cert/*
-keytool -importkeystore -srckeystore ./cert/isstbroker-keystore.p12 -srcstoretype PKCS12 -destkeystore ./cert/isstbroker-keystore.jks -deststoretype JKS -srcstorepass password -deststorepass password
-sudo cp ./cert/isstbroker-keystore.jks $CERT_PATH/
-# Ensure proper permissions for the `conf` directory and `default-connector-keystore.p12`
-echo "Setting permissions for the 'conf' directory and its files..."
-sudo chmod -R 755 ./conf
-sudo chown -R $(id -u):$(id -g) ./conf
 
-# Reminder for configuration
-echo "Please ensure that the produced file name matches the connector's config.json:"
-echo '  "ids:keyStore" : {'
-echo '    "@id" : "file:///conf/default-connector-keystore.p12"'
-echo '  }'
-echo "If needed, rename the generated file to 'default-connector-keystore.p12' or update the configuration."
+echo "Bringing up stack with Docker Compose..."
+docker compose down -v || true
+docker compose pull || true
+docker compose up --build -d
 
-# Docker Compose operations
-echo "Stopping and removing existing containers..."
-sudo docker compose down -v
-
-echo "Pulling updated images..."
-sudo docker compose pull
-
-echo "Building and starting services..."
-sudo docker compose up --build -d
-
-# Verify all services are running
-if [ $? -eq 0 ]; then
-  echo "All services are running and ready!"
-else
-  echo "Error: Services failed to start. Check logs for details."
-  exit 1
-fi
+echo "All services started. Nginx serving for $FQDN"

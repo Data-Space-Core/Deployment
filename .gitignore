@@ -1,0 +1,29 @@
+# Runtime and local env
+.env
+.env.*
+.generated/
+uploads/
+upload/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Certificates and keys (do not commit secrets)
+cert/**
+keys/**
+*.key
+*.jks
+*.p12
+*.pfx
+*.cer
+*.crt
+
+# Docker
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,22 @@
+name: python-security
+on:
+  push:
+  pull_request:
+jobs:
+  bandit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install bandit pip-audit
+      - name: Bandit scan
+        run: bandit -r connector_registration -q
+      - name: pip-audit
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          pip install -r connector_registration/requirements.txt
+          pip-audit -r connector_registration/requirements.txt || true
+
