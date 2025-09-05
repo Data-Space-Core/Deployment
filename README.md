@@ -1,42 +1,130 @@
-# Deployment
-There are two things that are needed to be in place to deploy the dataspace on the given host. 
-First you need to have fully qualified domain name (FQDN) for the host. Sencond you need valid SSL 
-certificates for the host machine that match the FQDN of the host. Once that is clear you can run the install script
-````
-sudo ./runner.sh
-````
-Script will ask your host FQDN and path where certificates are located. It will also ask for name of public certificate file and private key files. 
+# Overview
 
-For certificates you should chain public certificates into one file. Chained certificate file simply all three certificates concanated one 
-afther the other. The three certificates that are needed are: your host machine certificate, certificate authority intermediate certificate and the certificate
-authority certificate. You will get all these from the SSL certificate package that you obtain. 
+This repository deploys a dataspace stack behind Nginx: an IDS Connector, DAPS (Omejdn), Broker, and supporting UIs. Deployment is idempotent using templates; generated files live under `./.generated`. Secrets and keystores are not committed to the repo.
 
-Private key (and certificate signing request) are created when you order certificates and are not part of the package that you get from certificate 
-authority so remember to hold onto those. 
+**Key Commands**
+- Run: `./runner.sh`
+- Bring up/down: `docker compose up -d` / `docker compose down`
 
-NOTE: If you need to re-run the runner script, delete the folder and re-clone the repository first. Install script replaces variables in the deployment files with
-values you provide and re-running the script does not work as intended if previous run has already replaced those variables
+**Quick Links**
+- `.env.example` → copy to `.env` and edit
+- `nginx.template.conf` → rendered to `./.generated/nginx.conf`
+- `conf/config.template.json` → rendered to `./.generated/config.json`
 
-# Included Components
+**Endpoints (replace `<host>` with your FQDN)**
+- Connector: `https://<host>/connector/api/docs`
+- Broker Fuseki: `https://<host>/broker/fuseki/`
+- DAPS UI: `https://<host>/`
+- Registration API: `https://<host>/connector-registration/register-connector`
+- Provider UI: `https://<host>/provider-ui/`
+- Consumer UI: `https://<host>/consume/`
 
-This installation package include following dataspace components:
+**Repository Structure**
+- `docker-compose.yml`: service orchestration
+- `nginx.template.conf`: Nginx template (rendered at runtime)
+- `nginx.development.conf`: legacy dev config (not used in prod)
+- `runner.sh`: idempotent bootstrapper (renders templates, starts stack)
+- `conf/`: connector config templates and truststore
+- `config/`: Omejdn base YAMLs (copied to `.generated/config`)
+- `connector_registration/`: Flask service for connector registration
+- `scripts/register.sh`: registration helper (writes clients.yml, emits JSON)
+- `cert/`: TLS materials and broker keystores (generated, git‑ignored)
+- `keys/`: client certs directory (git‑ignored)
+- `.generated/`: rendered configs for runtime (git‑ignored)
+- `.github/workflows/`: security scans and validation CI
 
-- IDSA Data Space Connector
-- IDSA Omejdn DAPS Identity provider
-- IDSA Omejdn DAPS Web User Interface
-- IDSA Data Space Broker
+**Included Components**
+- IDS Connector, DAPS (Omejdn), Omejdn UI, Data Space Broker
+- PostgreSQL (connector persistence)
+- Nginx reverse proxy (entrypoint on 80/443)
 
-It also provides supporting components
+# Registration Service
 
-- PostgreSQL Database for data space connector persistency
-- NGINX Reverse Proxy to act as gateway to the different components
+The registration API accepts a connector certificate and creates a DAPS client entry. It returns the normalized client certificate file for download.
 
-# Usage
+- Service path: proxied at `https://<host>/connector-registration/`
+- Source: `connector_registration/app.py`
+- Helper script: `scripts/register.sh`
+- Volumes (compose): `/uploads`, `/config`, `/keys`
 
-Here is shor list of available user interfaces in the Deployement:
-## Conncetor
-- https://<host>/connecor/api/docs - Swagger UI for the connector
-## Broker
-- https://<host>/broker/fuseki/
-## DAPS 
-- https://<host>/
+**Endpoint: POST `/register-connector`**
+- Purpose: Register a connector or broker with DAPS and return the stored client certificate file
+- Auth: None by default (recommend adding token verification)
+- Form fields:
+  - `name`: connector name; defaults to `default-connector` if empty
+  - `security_profile`: e.g., `idsc:BASE_SECURITY_PROFILE`; defaults if empty
+  - `cert_file`: X.509 certificate file (PEM or DER)
+- Success response:
+  - Content: the stored client certificate file as an attachment
+  - Disposition: `attachment; filename=<CLIENT_ID>.cert`
+- Error response (JSON):
+  - `{"error": "...", "stderr"|"output": "...", "expected_path": "/keys/clients/..."}`
+
+Internal flow:
+- The service saves the upload under `/uploads` (10 MB limit, sanitized name)
+- Calls `/scripts/register.sh <name> <security_profile> <cert_file> --config-dir /config --keys-dir /keys`
+- Parses script JSON from stdout (final line) to locate the generated `client_cert` path
+- Streams that file back if present
+
+Script behavior (`scripts/register.sh`):
+- Computes `client_id` from certificate SKI/AKI, appends an entry to `/config/clients.yml`
+- Stores the normalized cert as `/keys/clients/<client_id>.cert`
+- Prints legacy log and a final JSON line like: `{"client_id":"...","client_name":"...","client_cert":"/keys/clients/<id>.cert"}`
+
+# Services
+
+Defined in `docker-compose.yml`:
+- `nginx`: public gateway on `80`/`443`; mounts `./.generated/nginx.conf` and `./cert`
+- `broker-core`: broker core; internal only
+- `broker-fuseki`: SPARQL endpoint; internal only
+- `omejdn-server`: DAPS server; mounts `./.generated/config` and `./keys`
+- `omejdn-ui`: DAPS admin UI; proxied at root (`/`)
+- `connector-database`: Postgres; internal only
+- `connector`: IDS connector; proxied under `/connector/`
+- `connector-registration`: Flask registration API; proxied under `/connector-registration/`
+- `connector-registration-user-interface`: UI for registration; proxied under `/connector-registration-user-interface/`
+- `provider-ui`: provider UI; proxied under `/provider-ui/`
+- `consumer-ui`: consumer UI; proxied under `/consume/`
+
+# Configuration
+
+- `.env`: copy from `.env.example` and adjust
+  - `DOMAIN`, `OMEJDN_PATH`, `ALLOWED_ORIGIN`
+  - `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`
+  - `ADMIN_USERNAME`, `ADMIN_PASSWORD` (Omejdn admin)
+- Templates
+  - `nginx.template.conf` → `./.generated/nginx.conf`
+  - `conf/config.template.json` → `./.generated/config.json`
+- Generated
+  - `./.generated/config/*.yml` → used by `omejdn-server`
+  - `./conf/default-connector-keystore.p12`, `./cert/isstbroker-keystore.{p12,jks}` → created by `runner.sh`
+
+# Install
+
+Prerequisites:
+- FQDN DNS record, Docker, Docker Compose
+- TLS materials for the FQDN: private key, server cert, chained fullchain
+
+Steps:
+- Optionally set variables in `.env`
+- Run `./runner.sh` and provide FQDN and TLS paths when prompted
+- The script renders configs, generates keystores, and runs `docker compose up -d`
+
+# Security & Ops
+
+- Secrets and keystores are git‑ignored; do not commit them
+- DB is internal only; Nginx is the only public entrypoint
+- CORS limited via `ALLOWED_ORIGIN`; adjust as needed
+- CI: gitleaks, Trivy, hadolint, bandit/pip‑audit, compose validation under `.github/workflows/`
+
+# Development
+
+- Local iteration on the registration service: edit `connector_registration/` and recreate the container
+- Dev Nginx config: `nginx.development.conf` (for experimentation only)
+
+# Troubleshooting
+
+- Rendered Nginx config: `./.generated/nginx.conf`
+- Omejdn config and clients: `./.generated/config/`
+- Registration uploads: `./upload/` (host), `/uploads` (container)
+- Check logs: `docker compose logs -f <service>`
