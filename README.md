@@ -81,8 +81,10 @@ Images are published under `ghcr.io/data-space-core`.
 - Broker Core: `ghcr.io/data-space-core/dsil-idsa-broker/core:latest`
 - Broker Fuseki: `ghcr.io/data-space-core/dsil-idsa-broker/fuseki:latest`
 - DAPS (Omejdn): `ghcr.io/data-space-core/dsil-omejdn-server/omejdn-server:latest`
-- Connector: `ghcr.io/data-space-core/connector/stage:latest`
-- Registration UI: `ghcr.io/data-space-core/connector-registration:latest`
+- Connector (stage): `ghcr.io/data-space-core/connector/stage:latest`
+- Connector Registration UI (stage): `ghcr.io/data-space-core/connector-registration/stage:latest`
+- Provider UI (stage): `ghcr.io/data-space-core/provide-user-interface/stage:latest`
+- Consumer UI (stage): `ghcr.io/data-space-core/consume-user-interface-2/stage:latest`
 
 If a pull fails with 401/denied, log in:
 ```
@@ -96,3 +98,17 @@ See `TROUBLESHOOTING.md` for common issues:
 - Cert/key mismatch → modulus check
 - `keytool` missing → install JRE
 - Path errors → scripts resolve repo root dynamically
+
+## Hardware Sizing (Guidance)
+- Minimum: 4 vCPU / 8 GB RAM / 50 GB disk
+- Recommended: 8 vCPU / 16 GB RAM / 100–200 GB disk
+- Production: 8–16 vCPU / 32+ GB RAM / ≥200 GB disk
+
+## Exposed Ports
+- 80, 443: Nginx reverse proxy
+- 8081: Connector (internal and mapped)
+- 5001: Connector registration backend (host port 5001)
+- 5002: Connector registration UI (host port 5002)
+- 8091: Provider UI (host port 8091)
+- 8092: Consumer UI (host port 8092)
+- 5433: PostgreSQL for connector (host port 5433)
