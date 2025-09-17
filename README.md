@@ -1,21 +1,32 @@
 # Deployment
-There are two things that are needed to be in place to deploy the dataspace on the given host. 
-First you need to have fully qualified domain name (FQDN) for the host. Sencond you need valid SSL 
-certificates for the host machine that match the FQDN of the host. Once that is clear you can run the install script
-````
-sudo ./runner.sh
-````
-Script will ask your host FQDN and path where certificates are located. It will also ask for name of public certificate file and private key files. 
 
-For certificates you should chain public certificates into one file. Chained certificate file simply all three certificates concanated one 
-afther the other. The three certificates that are needed are: your host machine certificate, certificate authority intermediate certificate and the certificate
-authority certificate. You will get all these from the SSL certificate package that you obtain. 
+This repo deploys the DS Core stack (Connector, DAPS, Broker, Nginx). Before running, ensure you have a Fully Qualified Domain Name (FQDN) and valid SSL certificates for that FQDN.
 
-Private key (and certificate signing request) are created when you order certificates and are not part of the package that you get from certificate 
-authority so remember to hold onto those. 
+Run the installer (no sudo):
+```
+./runner.sh
+```
 
-NOTE: If you need to re-run the runner script, delete the folder and re-clone the repository first. Install script replaces variables in the deployment files with
-values you provide and re-running the script does not work as intended if previous run has already replaced those variables
+The script prompts for:
+- FQDN
+- Certificate directory (e.g., `/etc/cert`)
+- Public certificate filename (e.g., `fullchain.pem`)
+- Private key filename (e.g., `privkey.pem`)
+- Chained certificate filename (for Nginx TLS, often same as public cert)
+
+During preflight it checks for `docker`, `openssl`, and `keytool`, validates Docker access, verifies the certificate and key match (modulus), and performs a GHCR pull test. If images are private in your environment, log in using a PAT with `read:packages` permissions:
+```
+docker login ghcr.io
+```
+
+Certificate guidance:
+- Provide a chained certificate file that contains server cert + intermediates + root.
+- Keep the private key safe; it is not part of typical CA delivery.
+
+Note: Re-running the installer is idempotent for most steps, but if you want to reset local changes you can use the helper script:
+```
+./scripts/clean.sh
+```
 
 # Included Components
 
@@ -33,10 +44,55 @@ It also provides supporting components
 
 # Usage
 
-Here is shor list of available user interfaces in the Deployement:
-## Conncetor
-- https://<host>/connecor/api/docs - Swagger UI for the connector
+Here is short list of available user interfaces in the deployment:
+## Connector
+- https://<host>/connector/api/docs - Swagger UI for the connector
 ## Broker
 - https://<host>/broker/fuseki/
 ## DAPS 
 - https://<host>/
+
+## Prerequisites
+- Ubuntu 22.04 LTS (or compatible)
+- Docker 24+ and Docker Compose v2
+- OpenSSL 1.1+/3.0+
+- Java Runtime Environment with `keytool` (e.g., OpenJDK 17)
+
+Install JRE on Debian/Ubuntu:
+```
+sudo apt-get update && sudo apt-get install -y openjdk-17-jre
+```
+
+Ensure Docker access without sudo. Add your user to the `docker` group and re-login if needed:
+```
+sudo usermod -aG docker "$USER"
+```
+
+## Certificate Model
+- Production: distinct certs per FQDN and service as required by your setup.
+- Testing: you may reuse a cert for convenience.
+- A dev-only broker TLS helper is provided:
+```
+./scripts/generate-broker-cert.sh broker.dev.local
+```
+
+## GHCR Images
+Images are published under `ghcr.io/data-space-core`.
+- Broker Core: `ghcr.io/data-space-core/dsil-idsa-broker/core:latest`
+- Broker Fuseki: `ghcr.io/data-space-core/dsil-idsa-broker/fuseki:latest`
+- DAPS (Omejdn): `ghcr.io/data-space-core/dsil-omejdn-server/omejdn-server:latest`
+- Connector: `ghcr.io/data-space-core/connector/stage:latest`
+- Registration UI: `ghcr.io/data-space-core/connector-registration:latest`
+
+If a pull fails with 401/denied, log in:
+```
+docker login ghcr.io
+```
+Use a GitHub PAT with `read:packages`.
+
+## Troubleshooting
+See `TROUBLESHOOTING.md` for common issues:
+- GHCR unauthorized → login with PAT
+- Cert/key mismatch → modulus check
+- `keytool` missing → install JRE
+- Path errors → scripts resolve repo root dynamically
