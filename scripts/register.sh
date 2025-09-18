@@ -1,7 +1,8 @@
 #!/bin/sh
 
-# Set dynamic paths using the tilde (~) for the home directory
-BASE_DIR=~/Deployment
+# Resolve repo root based on this script's location (scripts/ -> repo root)
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+BASE_DIR="$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)"
 KEYS_DIR="$BASE_DIR/keys"
 CLIENTS_DIR="$KEYS_DIR/clients"
 CONFIG_DIR="$BASE_DIR/config"
@@ -12,13 +13,11 @@ echo "KEYS_DIR: $KEYS_DIR"
 echo "CLIENTS_DIR: $CLIENTS_DIR"
 echo "CONFIG_DIR: $CONFIG_DIR"
 
-# Ensure the directories exist
-mkdir -p "$KEYS_DIR"
-mkdir -p "$CLIENTS_DIR"
-mkdir -p "$CONFIG_DIR"
+# Ensure the directories exist (owned by current user)
+mkdir -p "$KEYS_DIR" "$CLIENTS_DIR" "$CONFIG_DIR"
 
 if [ ! $# -ge 1 ] || [ ! $# -le 3 ]; then
-    echo "Usage: $0 NAME (SECURITY_PROFILE) (CERTFILE)"
+    echo "Usage: $0 NAME [SECURITY_PROFILE] [CERTFILE]"
     exit 1
 fi
 
@@ -30,9 +29,14 @@ CLIENT_CERT="$KEYS_DIR/$CLIENT_NAME.cert"
 echo "CLIENT_CERT: $CLIENT_CERT"
 
 if [ -n "$3" ]; then
-    [ ! -f "$3" ] && (echo "Cert not found"; exit 1)
+    if [ ! -f "$3" ]; then
+        echo "Cert not found: $3"
+        exit 1
+    fi
     cert_format="DER"
-    openssl x509 -noout -in "$3" 2>/dev/null && cert_format="PEM"
+    if openssl x509 -noout -in "$3" >/dev/null 2>&1; then
+        cert_format="PEM"
+    fi
     openssl x509 -inform "$cert_format" -in "$3" -text > "$CLIENT_CERT"
 else
     openssl req -newkey rsa:2048 -new -batch -nodes -x509 -days 3650 -text -keyout "$CLIENTS_DIR/${CLIENT_NAME}.key" -out "$CLIENT_CERT"
