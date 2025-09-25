@@ -269,11 +269,17 @@ echo "Pulling updated images..."
 docker compose -f "$COMPOSE_FILE" pull
 
 echo "Building and starting services..."
-docker compose -f "$COMPOSE_FILE" up --build -d
-
-# Verify all services are running
-if [ $? -eq 0 ]; then
-  echo "All services are running and ready!"
+if docker compose -f "$COMPOSE_FILE" up --build -d; then
+  echo "Containers started; waiting 30 seconds for initialization..."
+  sleep 30
+  echo "Running provider-ui migrations..."
+  if docker compose -f "$COMPOSE_FILE" exec -T provider-ui python manage.py migrate; then
+    echo "Provider-ui migrations complete."
+    echo "All services are running and ready!"
+  else
+    echo "Error: Failed to run provider-ui migrations."
+    exit 1
+  fi
 else
   echo "Error: Services failed to start. Check logs for details."
   exit 1
