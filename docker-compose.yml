@@ -171,7 +171,7 @@ services:
 
   provider-ui:
     container_name: provider-ui
-    image: ghcr.io/data-space-core/provide-user-interface/stage:latest
+    image: ghcr.io/eu-optimi/provide-user-interface/stage:latest
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - .env:/app/.env
