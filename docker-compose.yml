@@ -190,6 +190,17 @@ services:
       - "8092:8000"
     networks:
       - local
+
+  tool-ui:
+    container_name: tool-ui
+    image: ghcr.io/eu-optimi/logistics-footprint-explorer:sha-bba1113e46a1ddb532fce28631f5b60c0b8e9784
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .env:/app/.env
+    ports:
+      - "8093:8000"
+    networks:
+      - local
   
 volumes:
   broker-fuseki: # Volume for Fuseki data
