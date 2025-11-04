@@ -193,17 +193,12 @@ services:
       - local
 
   tool-ui:
-    container_name: tool-ui
-    # Use the pre-built image (frontend + server). Do NOT override the command
-    # with a python command — this image expects to be run with its Node entrypoint.
     image: ghcr.io/eu-optimi/logistics-footprint-explorer:sha-bba1113e46a1ddb532fce28631f5b60c0b8e9784
+    container_name: tool-ui
     env_file:
       - .env
     ports:
-      - "4001:4001" # Exposes the Tool UI on port 8093
-    # mount local data or config if needed (optional)
-    # volumes:
-    #   - ./some/config:/app/config
+      - "4001:4001"   # (fix comment) Exposes Tool UI on host port 4001
     restart: unless-stopped
     networks:
       - local
