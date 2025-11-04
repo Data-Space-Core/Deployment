@@ -194,12 +194,17 @@ services:
 
   tool-ui:
     container_name: tool-ui
+    # Use the pre-built image (frontend + server). Do NOT override the command
+    # with a python command — this image expects to be run with its Node entrypoint.
     image: ghcr.io/eu-optimi/logistics-footprint-explorer:sha-bba1113e46a1ddb532fce28631f5b60c0b8e9784
-    command: python manage.py runserver 0.0.0.0:8000
-    volumes:
-      - .env:/app/.env
+    env_file:
+      - .env
     ports:
       - "8093:8000"
+    # mount local data or config if needed (optional)
+    # volumes:
+    #   - ./some/config:/app/config
+    restart: unless-stopped
     networks:
       - local
   
