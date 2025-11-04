@@ -200,7 +200,7 @@ services:
     env_file:
       - .env
     ports:
-      - "8093:4001"
+      - "8093:5173"
     # mount local data or config if needed (optional)
     # volumes:
     #   - ./some/config:/app/config
