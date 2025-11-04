@@ -193,7 +193,7 @@ services:
       - local
 
   tool-ui:
-    image: ghcr.io/eu-optimi/logistics-footprint-explorer:sha-3abb90e2568dc14f76cbc8be92c0723ef39915ba
+    image: ghcr.io/eu-optimi/logistics-footprint-explorer:stage-latest
     container_name: tool-ui
     env_file:
       - .env
