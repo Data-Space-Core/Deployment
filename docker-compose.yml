@@ -200,7 +200,7 @@ services:
     env_file:
       - .env
     ports:
-      - "8093:4001"
+      - "4001:4001" # Exposes the Tool UI on port 8093
     # mount local data or config if needed (optional)
     # volumes:
     #   - ./some/config:/app/config
