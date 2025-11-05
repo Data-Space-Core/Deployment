@@ -183,7 +183,7 @@ services:
   
   consumer-ui:
     container_name: consumer-ui
-    image: ghcr.io/data-space-core/consume-user-interface-2/stage:latest
+    image: ghcr.io/eu-optimi/consume-user-interface-2/stage:latest
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - .env:/app/.env

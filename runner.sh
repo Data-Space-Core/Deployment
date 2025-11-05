@@ -270,12 +270,19 @@ docker compose -f "$COMPOSE_FILE" pull
 
 echo "Building and starting services..."
 if docker compose -f "$COMPOSE_FILE" up --build -d; then
-  echo "Containers started; waiting 30 seconds for initialization..."
-  sleep 30
+  echo "Containers started; waiting 180 seconds for initialization..."
+  sleep 180
   echo "Running provider-ui migrations..."
   if docker compose -f "$COMPOSE_FILE" exec -T provider-ui python manage.py migrate; then
     echo "Provider-ui migrations complete."
-    echo "All services are running and ready!"
+    echo "Running provider-ui license insertion script..."
+    if docker compose -f "$COMPOSE_FILE" exec -T provider-ui python /app/tools/insert_licenses.py; then
+      echo "License insertion script complete."
+      echo "All services are running and ready!"
+    else
+      echo "Error: Failed to run provider-ui license insertion script."
+      exit 1
+    fi
   else
     echo "Error: Failed to run provider-ui migrations."
     exit 1
