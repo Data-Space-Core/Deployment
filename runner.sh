@@ -12,11 +12,14 @@ need_cmd() {
   command -v "$1" >/dev/null 2>&1 || { err "Missing dependency: $1"; return 1; }
 }
 
-say "Preflight: checking dependencies (docker, openssl, keytool)"
+say "Preflight: checking dependencies (docker, openssl, keytool, perl, dig, ip)"
 need_cmd docker
 need_cmd openssl
 need_cmd keytool || {
   err "keytool not found. Install a JRE (e.g., openjdk-17-jre)."; exit 1; }
+need_cmd perl
+need_cmd dig
+need_cmd ip
 
 # Docker access check
 if ! docker info >/dev/null 2>&1; then
@@ -44,6 +47,97 @@ check_file_exists() {
   fi
 }
 
+CONFIG_CACHE="$BASE_DIR/.runner-config"
+
+load_cached_inputs() {
+  if [ -f "$CONFIG_CACHE" ]; then
+    say "Loading cached configuration from $CONFIG_CACHE"
+    # shellcheck disable=SC1090
+    . "$CONFIG_CACHE"
+  fi
+}
+
+save_cached_inputs() {
+  local tmp
+  tmp="$(mktemp)"
+  {
+    printf 'FQDN=%q\n' "${FQDN:-}"
+    printf 'CERT_PATH=%q\n' "${CERT_PATH:-}"
+    printf 'CERT_FILE=%q\n' "${CERT_FILE:-}"
+    printf 'KEY_FILE=%q\n' "${KEY_FILE:-}"
+    printf 'CHAIN_FILE=%q\n' "${CHAIN_FILE:-}"
+  } >"$tmp"
+  mv "$tmp" "$CONFIG_CACHE"
+}
+
+prompt_with_default() {
+  local var_name=$1
+  local prompt_message=$2
+  local allow_empty=${3:-false}
+  local current="${!var_name:-}"
+  local input
+  while true; do
+    if [ -n "$current" ]; then
+      read -r -p "$prompt_message [$current]: " input
+    else
+      read -r -p "$prompt_message: " input
+    fi
+
+    if [ -z "$input" ]; then
+      if [ -n "$current" ]; then
+        printf -v "$var_name" "%s" "$current"
+        break
+      elif [ "$allow_empty" = "true" ]; then
+        printf -v "$var_name" ""
+        break
+      else
+        err "$prompt_message cannot be empty."
+        continue
+      fi
+    else
+      printf -v "$var_name" "%s" "$input"
+      break
+    fi
+  done
+}
+
+replace_value_in_file() {
+  local file=$1
+  local placeholder=$2
+  local new_value=$3
+  local previous_value=${4:-}
+
+  if [ ! -f "$file" ]; then
+    return
+  fi
+
+  if [ -n "$previous_value" ] && [ "$previous_value" != "$new_value" ] && grep -q "$previous_value" "$file"; then
+    perl -0pi -e 's/\Q'"$previous_value"'\E/'"$new_value"'/g' "$file"
+  elif grep -q "$placeholder" "$file"; then
+    perl -0pi -e 's/\Q'"$placeholder"'\E/'"$new_value"'/g' "$file"
+  fi
+}
+
+load_cached_inputs
+
+register_client() {
+  local name=$1
+  local security_profile=$2
+  local cert_path=$3
+
+  if [ ! -x "$REGISTER_SCRIPT" ]; then
+    err "Registration script $REGISTER_SCRIPT not found or not executable."
+    return 1
+  fi
+
+  if [ -f "$CLIENTS_FILE" ] && grep -q "client_name: $name" "$CLIENTS_FILE"; then
+    say "Registration for $name already present; skipping."
+    return 0
+  fi
+
+  "$REGISTER_SCRIPT" "$name" "$security_profile" "$cert_path"
+}
+
 # Check required directories
 check_and_create_dir "$BASE_DIR/cert"
 check_and_create_dir "$BASE_DIR/conf"
@@ -60,19 +154,19 @@ fi
 NGINX_CONF="$BASE_DIR/nginx.development.conf"
 COMPOSE_FILE="$BASE_DIR/docker-compose.yml"
 CONNECTORCONF="$BASE_DIR/conf/config.json"
+ENV_FILE="$BASE_DIR/.env"
+CLIENTS_FILE="$BASE_DIR/config/clients.yml"
+REGISTER_SCRIPT="$BASE_DIR/scripts/register.sh"
 
-# Ask for the Fully Qualified Domain Name (FQDN)
-echo "Please provide the Fully Qualified Domain Name (FQDN):"
-read -r FQDN
-# If FQDN is empty, try to auto-detect it
-if [[ -z "$FQDN" ]]; then
+OLD_FQDN="${FQDN:-}"
+prompt_with_default FQDN "Fully Qualified Domain Name (FQDN)" true
+if [[ -z "${FQDN:-}" ]]; then
   SERVER_IP=$(ip addr show scope global | grep 'inet ' | awk '{print $2}' | cut -d'/' -f1 | head -n1)
   if [[ -z "$SERVER_IP" ]]; then
     echo "❌ Could not determine the server's IP address."
     exit 1
   fi
 
-  # Use dig to resolve FQDN from IP
   FQDN=$(dig +short -x "$SERVER_IP" | sed 's/\.$//')
 
   if [[ -z "$FQDN" ]]; then
@@ -82,44 +176,38 @@ if [[ -z "$FQDN" ]]; then
 
   echo "✅ Auto-detected FQDN: $FQDN"
 else
-  echo "✅ Using provided FQDN: $FQDN"
+  echo "✅ Using FQDN: $FQDN"
 fi
 
-# Ask for the path to the SSL certificate directory
-echo "Please provide the path to the SSL certificates:"
-read -r CERT_PATH
-# Check if directory exists
+OLD_CERT_PATH="${CERT_PATH:-}"
+prompt_with_default CERT_PATH "Path to the SSL certificates directory"
 if [[ ! -d "$CERT_PATH" ]]; then
   echo "❌ Directory does not exist: $CERT_PATH"
   exit 1
 fi
 
-# Ask for the path to the SSL cert file
-echo "Please provide the name of public certificate file:"
-read -r CERT_FILE
-# Check if file exists
+OLD_CERT_FILE="${CERT_FILE:-}"
+prompt_with_default CERT_FILE "Public certificate filename"
 if [[ ! -f "$CERT_PATH/$CERT_FILE" ]]; then
   echo "❌ Public certificate file not found: $CERT_PATH/$CERT_FILE"
   exit 1
 fi
-# Ask for the path to the SSL private key
-echo "Please provide the name of private key file:"
-read -r KEY_FILE
-# Check if file exists
+
+OLD_KEY_FILE="${KEY_FILE:-}"
+prompt_with_default KEY_FILE "Private key filename"
 if [[ ! -f "$CERT_PATH/$KEY_FILE" ]]; then
   echo "❌ Private key file not found: $CERT_PATH/$KEY_FILE"
   exit 1
 fi
 
-# Ask for the path to chained SSL public key
-echo "Please provide the name of chained public certificate file:"
-read -r CHAIN_FILE
-
-# Check if file exists
+OLD_CHAIN_FILE="${CHAIN_FILE:-}"
+prompt_with_default CHAIN_FILE "Chained public certificate filename"
 if [[ ! -f "$CERT_PATH/$CHAIN_FILE" ]]; then
   echo "❌ Chained certificate file not found: $CERT_PATH/$CHAIN_FILE"
   exit 1
 fi
+
+save_cached_inputs
 
 # Check if the nginx configuration file exists
 if [[ ! -f "$NGINX_CONF" ]]; then
@@ -133,13 +221,14 @@ if [[ ! -f "$COMPOSE_FILE" ]]; then
     exit 1
 fi
 
-sed -i "s|__HOST__|$FQDN|g" "$NGINX_CONF"
-sed -i "s|__CERT__|$CHAIN_FILE|g" "$NGINX_CONF"
-sed -i "s|__KEY__|$KEY_FILE|g" "$NGINX_CONF"
-sed -i "s|__HOST__|$FQDN|g" "$COMPOSE_FILE" || true
-sed -i "s|__HOST__|$FQDN|g" "$CONNECTORCONF" || true
-sed -i "s|__CERTDIRECTORY__|$CERT_PATH|g" "$COMPOSE_FILE" || true
-sed -i "s|__HOST__|$FQDN|g" "$BASE_DIR/config/omejdn.yml" || true
+replace_value_in_file "$NGINX_CONF" "__HOST__" "$FQDN" "$OLD_FQDN"
+replace_value_in_file "$NGINX_CONF" "__CERT__" "$CHAIN_FILE" "$OLD_CHAIN_FILE"
+replace_value_in_file "$NGINX_CONF" "__KEY__" "$KEY_FILE" "$OLD_KEY_FILE"
+replace_value_in_file "$COMPOSE_FILE" "__HOST__" "$FQDN" "$OLD_FQDN"
+replace_value_in_file "$CONNECTORCONF" "__HOST__" "$FQDN" "$OLD_FQDN"
+replace_value_in_file "$BASE_DIR/config/omejdn.yml" "__HOST__" "$FQDN" "$OLD_FQDN"
+replace_value_in_file "$ENV_FILE" "__HOST__" "$FQDN" "$OLD_FQDN"
+replace_value_in_file "$BASE_DIR/connector_registration/Connector Registration.postman_collection.json" "__HOST__" "$FQDN" "$OLD_FQDN"
 # Check required files
 MISSING_FILES=0
 CERT_DIR="$BASE_DIR/cert"
@@ -169,26 +258,6 @@ if [ "${cert_md5:-x}" != "${key_md5:-y}" ]; then
   exit 1
 fi
 
-# Register connector to DAPS
-REGISTER_SCRIPT="$BASE_DIR/scripts/register.sh"
-CONNECTOR_NAME="default-connector"
-SECURITY_PROFILE="idsc:BASE_SECURITY_PROFILE"
-
-if [ -x "$REGISTER_SCRIPT" ]; then
-  echo "Registering connector to DAPS... with certificate at $CERT_PATH/$CERT_FILE"
-  "$REGISTER_SCRIPT" "$CONNECTOR_NAME" "$SECURITY_PROFILE" "$CERT_PATH/$CERT_FILE"
-
-  if [ $? -eq 0 ]; then
-    echo "Connector successfully registered to DAPS!"
-  else
-    echo "Error: Failed to register connector to DAPS."
-    exit 1
-  fi
-else
-  echo "Error: Registration script $REGISTER_SCRIPT not found or not executable."
-  exit 1
-fi
-
 # Generate PKCS#12 file
 echo "Generating Connector PKCS#12 file..."
 openssl pkcs12 -export -out "$OUT_FILE" \
@@ -200,25 +269,6 @@ if [ $? -eq 0 ]; then
   echo "PKCS#12 file successfully generated at $OUT_FILE"
 else
   echo "Error: Failed to generate PKCS#12 file."
-  exit 1
-fi
-
-# Register Broker with DAPS
-CONNECTOR_NAME="default-broker"
-SECURITY_PROFILE="idsc:BASE_SECURITY_PROFILE"
-
-if [ -x "$REGISTER_SCRIPT" ]; then
-  echo "Registering broker to DAPS... with certificate at $CERT_PATH/$CERT_FILE"
-  "$REGISTER_SCRIPT" "$CONNECTOR_NAME" "$SECURITY_PROFILE" "$CERT_PATH/$CERT_FILE"
-
-  if [ $? -eq 0 ]; then
-    echo "Connector successfully registered to DAPS!"
-  else
-    echo "Error: Failed to register connector to DAPS."
-    exit 1
-  fi
-else
-  echo "Error: Registration script $REGISTER_SCRIPT not found or not executable."
   exit 1
 fi
 
@@ -278,7 +328,15 @@ if docker compose -f "$COMPOSE_FILE" up --build -d; then
     echo "Running provider-ui license insertion script..."
     if docker compose -f "$COMPOSE_FILE" exec -T provider-ui python /app/tools/insert_licenses.py; then
       echo "License insertion script complete."
-      echo "All services are running and ready!"
+      echo "Registering connector clients with DAPS..."
+      if register_client "default-connector" "idsc:BASE_SECURITY_PROFILE" "$CERT_PATH/$CERT_FILE" \
+        && register_client "default-broker" "idsc:BASE_SECURITY_PROFILE" "$CERT_PATH/$CERT_FILE"; then
+        echo "Connector registration step complete."
+        echo "All services are running and ready!"
+      else
+        err "Failed to register connector clients with DAPS."
+        exit 1
+      fi
     else
       echo "Error: Failed to run provider-ui license insertion script."
       exit 1

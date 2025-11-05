@@ -33,19 +33,17 @@
 					]
 				},
 				"url": {
-					"raw": "https://optimi.collab-cloud.eu/connector-registration/register-connector",
+					"raw": "https://__HOST__/connector-registration/register-connector",
 					"protocol": "https",
 					"host": [
-						"digi4live",
-						"collab-cloud",
-						"eu"
+						"__HOST__"
 					],
 					"path": [
 						"connector-registration",
 						"register-connector"
 					]
 				},
-				"description": "Generated from cURL: curl --location 'https://optimi.collab-cloud.eu/connector-registration/register-connector' \\\n--form 'name=default-connector' \\\n--form 'security_profile=idsc:BASE_SECURITY_PROFILE' \\\n--form 'cert_file=@/path/to/server.crt'"
+				"description": "Generated from cURL: curl --location 'https://__HOST__/connector-registration/register-connector' \\\n--form 'name=default-connector' \\\n--form 'security_profile=idsc:BASE_SECURITY_PROFILE' \\\n--form 'cert_file=@/path/to/server.crt'"
 			},
 			"response": []
 		}
