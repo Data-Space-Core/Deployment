@@ -22,6 +22,7 @@ services:
       - omejdn-server
       - omejdn-ui
       - connector
+      - tool-ui
       - connector-database
 
   # Broker Core Service - Manages data connectors and catalog
@@ -29,7 +30,7 @@ services:
     image: ghcr.io/data-space-core/dsil-idsa-broker/core:latest
     container_name: broker
     volumes:
-      - /etc/cert:/etc/cert/ # SSL certificates
+      - ./cert:/etc/cert/ # SSL certificates
     restart: always
     environment:
       - IDENTITY_JAVAKEYSTORE=/etc/cert/isstbroker-keystore.jks
@@ -171,7 +172,7 @@ services:
 
   provider-ui:
     container_name: provider-ui
-    image: ghcr.io/data-space-core/provide-user-interface/stage:latest
+    image: ghcr.io/eu-optimi/provide-user-interface/stage:latest
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - .env:/app/.env
@@ -182,12 +183,23 @@ services:
   
   consumer-ui:
     container_name: consumer-ui
-    image: ghcr.io/data-space-core/consume-user-interface-2/stage:latest
+    image: ghcr.io/eu-optimi/consume-user-interface-2/stage:latest
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - .env:/app/.env
     ports:
       - "8092:8000"
+    networks:
+      - local
+
+  tool-ui:
+    image: ghcr.io/eu-optimi/logistics-footprint-explorer:stage-latest
+    container_name: tool-ui
+    env_file:
+      - .env
+    ports:
+      - "4001:4001"   # (fix comment) Exposes Tool UI on host port 4001
+    restart: unless-stopped
     networks:
       - local
   
