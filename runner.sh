@@ -235,7 +235,7 @@ else
   exit 1
 fi
 
-chmod -R u=rw,go=r "$BASE_DIR/cert" || true
+chmod -R u=rwx,go=rx "$BASE_DIR/cert" || true
 keytool -importkeystore \
   -srckeystore "$BASE_DIR/cert/isstbroker-keystore.p12" -srcstoretype PKCS12 \
   -destkeystore "$BASE_DIR/cert/isstbroker-keystore.jks" -deststoretype JKS \
