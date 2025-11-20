@@ -285,14 +285,15 @@ else
   exit 1
 fi
 
-chmod -R u=rw,go=r "$BASE_DIR/cert" || true
+chmod -R u=rwx,go=rx "$BASE_DIR/cert" || true
 keytool -importkeystore \
   -srckeystore "$BASE_DIR/cert/isstbroker-keystore.p12" -srcstoretype PKCS12 \
   -destkeystore "$BASE_DIR/cert/isstbroker-keystore.jks" -deststoretype JKS \
   -srcstorepass password -deststorepass password
 
-# Optionally copy JKS to cert path for external usage
-cp -f "$BASE_DIR/cert/isstbroker-keystore.jks" "$CERT_PATH/" || true
+# copy certficates and key from host cert path to project path
+cp -f "$CERT_PATH/$CERT_FILE" "$BASE_DIR/cert/server.crt" || true
+cp -f "$CERT_PATH/$KEY_FILE" "$BASE_DIR/cert/server.key" || true
 
 # Ensure proper permissions for the `conf` directory and generated keystore
 echo "Setting permissions for the 'conf' directory and its files..."

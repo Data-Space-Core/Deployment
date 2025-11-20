@@ -30,7 +30,7 @@ services:
     image: ghcr.io/data-space-core/dsil-idsa-broker/core:latest
     container_name: broker
     volumes:
-      - /etc/cert:/etc/cert/ # SSL certificates
+      - ./cert:/etc/cert/ # SSL certificates
     restart: always
     environment:
       - IDENTITY_JAVAKEYSTORE=/etc/cert/isstbroker-keystore.jks
